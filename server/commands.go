@@ -49,7 +49,7 @@ func commandHandler(command CommandIdentifier) (string, error) {
 	switch command {
 	case StartVideoStream:
 		err := startVideoStream(
-			os.Getenv("DEVICE_PATH"),
+			os.Getenv("CAMERA_DEVICE_PATH"),
 			[2]int{1920, 1080},
 			30,
 			os.Getenv("SERVER_ADDRESS"),
