@@ -28,14 +28,14 @@ func startVideoStream(
 	builder := video.InitFFMPEGCommandBuilder()
 	builder.SetStreamFormat(
 		video.V4L2,
-	).SetInputFormat(
-		video.MJPEG,
-	).SetVideoSize(
-		resolution[0],
-		resolution[1],
 	).SetFramerate(
 		framerate,
-	).SetRE().SetStreamLoop().SetDevice(
+	).SetRE().SetStreamLoop().SetVideoSize(
+		resolution[0],
+		resolution[1],
+	).SetInputFormat(
+		video.MJPEG,
+	).SetDevice(
 		devicePath,
 	).SetRTSPOutput(serverAddress)
 	return builder.Execute()
