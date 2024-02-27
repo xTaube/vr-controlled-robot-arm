@@ -35,7 +35,7 @@ func startVideoStream(
 		resolution[1],
 	).SetFramerate(
 		framerate,
-	).SetDevice(
+	).SetRE().SetStreamLoop().SetDevice(
 		devicePath,
 	).SetRTSPOutput(serverAddress)
 	return builder.Execute()

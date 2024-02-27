@@ -52,6 +52,16 @@ func (builder *FFMPEGCommandBuilder) SetRTSPOutput(serverAddress string) *FFMPEG
 	return builder
 }
 
+func (builder *FFMPEGCommandBuilder) SetStreamLoop() *FFMPEGCommandBuilder {
+	builder.command += " -stream_loop -1"
+	return builder
+}
+
+func (builder *FFMPEGCommandBuilder) SetRE() *FFMPEGCommandBuilder {
+	builder.command += " -re"
+	return builder
+}
+
 func (builder *FFMPEGCommandBuilder) Execute() error {
 	cmd := exec.Command(builder.command)
 	return cmd.Run()
