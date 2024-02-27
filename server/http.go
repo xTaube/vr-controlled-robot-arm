@@ -8,7 +8,7 @@ import (
 	"github.com/quic-go/webtransport-go"
 )
 
-const BUFF_SIZE = 1024
+const BUFF_SIZE = 128
 
 func ControlRequestHandler(server *webtransport.Server) func(http.ResponseWriter, *http.Request) {
 	log.Println("ControlRequestHander registered")
