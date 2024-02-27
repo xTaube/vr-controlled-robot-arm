@@ -48,7 +48,7 @@ func (builder *FFMPEGCommandBuilder) SetDevice(devicePath string) *FFMPEGCommand
 }
 
 func (builder *FFMPEGCommandBuilder) SetRTSPOutput(serverAddress string) *FFMPEGCommandBuilder {
-	builder.command += fmt.Sprintf(" -re -stream_loop -1 -c copy -f rtsp %s", serverAddress)
+	builder.command += fmt.Sprintf(" -c copy -f rtsp %s", serverAddress)
 	return builder
 }
 
