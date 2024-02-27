@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -8,7 +9,6 @@ import (
 )
 
 const BUFF_SIZE = 1024
-
 
 func ControlRequestHandler(server *webtransport.Server) func(http.ResponseWriter, *http.Request) {
 	log.Println("ControlRequestHander registered")
@@ -32,6 +32,7 @@ func ControlRequestHandler(server *webtransport.Server) func(http.ResponseWriter
 		}
 		log.Println("Stream accepted")
 		defer stream.Close()
+
 		for {
 			buf := make([]byte, BUFF_SIZE)
 			log.Println("Waiting for message...")
@@ -40,6 +41,13 @@ func ControlRequestHandler(server *webtransport.Server) func(http.ResponseWriter
 				break
 			}
 			log.Printf("Recived from stream %v: %s\n", stream.StreamID(), buf[:n])
+			output, err := commandHandler(CommandIdentifier((buf[0] - 48)))
+			if err != nil {
+				log.Printf("Error occured: %s", err)
+				stream.Write([]byte(fmt.Sprintf("Error: %s", err)))
+			} else {
+				stream.Write([]byte(fmt.Sprintf("Output: %s", output)))
+			}
 		}
 	}
 }
