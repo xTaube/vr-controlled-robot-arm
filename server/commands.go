@@ -19,26 +19,8 @@ const (
 	StopVideoStream
 )
 
-func startVideoStream(
-	devicePath string,
-	resolution [2]int, 
-	framerate int, 
-	serverAddress string,
-) error {
-	builder := video.InitFFMPEGCommandBuilder()
-	builder.SetStreamFormat(
-		video.V4L2,
-	).SetFramerate(
-		framerate,
-	).SetRE().SetStreamLoop().SetVideoSize(
-		resolution[0],
-		resolution[1],
-	).SetInputFormat(
-		video.MJPEG,
-	).SetDevice(
-		devicePath,
-	).SetRTSPOutput(serverAddress)
-	return builder.Execute()
+func startVideoStream() error {
+	return video.StartFFMPEGVideoStreaming()
 }
 
 func stopVideoStream() error {
@@ -48,12 +30,7 @@ func stopVideoStream() error {
 func commandHandler(command CommandIdentifier) (string, error) {
 	switch command {
 	case StartVideoStream:
-		err := startVideoStream(
-			os.Getenv("CAMERA_DEVICE_PATH"),
-			[2]int{1920, 1080},
-			30,
-			os.Getenv("SERVER_ADDRESS"),
-		)
+		err := startVideoStream()
 		return fmt.Sprintf("Streaming to %s \n", os.Getenv("SERVER_ADDRESS")), err
 	case StopVideoStream:
 		err := stopVideoStream()
