@@ -29,7 +29,7 @@ func startVideoStream(
 	builder.SetStreamFormat(
 		video.V4L2,
 	).SetInputFormat(
-		video.H264,
+		video.MJPEG,
 	).SetVideoSize(
 		resolution[0],
 		resolution[1],
