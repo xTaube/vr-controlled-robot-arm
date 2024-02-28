@@ -92,13 +92,8 @@ func (vs *VideoStream) Stop() error {
 	if vs.ffmpegProcess == nil {
 		return &StreamOffError{}
 	}
-
-	err := vs.ffmpegProcess.Process.Signal(syscall.SIGTERM)
-	if err != nil {
-		return err
-	}
 	
-	err = vs.ffmpegProcess.Wait()
+	err := vs.ffmpegProcess.Process.Kill()
 	if err != nil {
 		return err
 	}
