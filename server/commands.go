@@ -2,7 +2,6 @@ package server
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/xTaube/vr-controlled-robot-arm/video"
 )
@@ -19,23 +18,25 @@ const (
 	StopVideoStream
 )
 
-func startVideoStream() error {
-	return video.StartFFMPEGVideoStreaming()
+type CommandHandler struct {
+	videoStream *video.VideoStream
 }
 
-func stopVideoStream() error {
-	return video.StopFFMPEGVideoStreaming()
-}
-
-func commandHandler(command CommandIdentifier) (string, error) {
+func (ch *CommandHandler) Handle(command CommandIdentifier) (string, error) {
 	switch command {
-	case StartVideoStream:
-		err := startVideoStream()
-		return fmt.Sprintf("Streaming to %s \n", os.Getenv("SERVER_ADDRESS")), err
-	case StopVideoStream:
-		err := stopVideoStream()
-		return "Stream is down \n", err
-	default:
-		return "", &CommandNotFound{}
+		case StartVideoStream:
+			rtspServerAddress, err := ch.videoStream.Start()
+			return fmt.Sprintf("Streaming to %s", rtspServerAddress), err
+		
+		case StopVideoStream:
+			err := ch.videoStream.Stop()
+			return "Stream is down", err
+		
+		default:
+			return "", &CommandNotFound{}
 	}
+}
+
+func InitCommandHandler(videoStream *video.VideoStream) *CommandHandler {
+	return &CommandHandler{videoStream: videoStream}
 }

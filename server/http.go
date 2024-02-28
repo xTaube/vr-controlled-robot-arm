@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/quic-go/webtransport-go"
+	"github.com/xTaube/vr-controlled-robot-arm/video"
 )
 
 const BUFF_SIZE = 128
@@ -33,6 +35,16 @@ func ControlRequestHandler(server *webtransport.Server) func(http.ResponseWriter
 		log.Println("Stream accepted")
 		defer stream.Close()
 
+		videoStream := video.InitVideoStream(
+			os.Getenv("CAMERA_DEVICE_PATH"),
+			video.Resoulution{Width: 1920, Height: 1080},
+			video.FPS30,
+			video.MJPEG,
+			"rtsp://localhost:8554/video/feed",
+		)
+		defer videoStream.Stop()
+
+		commandHandler := InitCommandHandler(videoStream)
 		for {
 			buf := make([]byte, BUFF_SIZE)
 			log.Println("Waiting for message...")
@@ -41,7 +53,7 @@ func ControlRequestHandler(server *webtransport.Server) func(http.ResponseWriter
 				break
 			}
 			log.Printf("Recived from stream %v: %s\n", stream.StreamID(), buf[:n])
-			output, err := commandHandler(CommandIdentifier((buf[0] - 48)))
+			output, err := commandHandler.Handle(CommandIdentifier((buf[0] - 48)))
 			if err != nil {
 				log.Printf("Error occured: %s", err)
 				stream.Write([]byte(fmt.Sprintf("Error: %s", err)))
