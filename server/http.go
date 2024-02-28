@@ -61,5 +61,6 @@ func ControlRequestHandler(server *webtransport.Server) func(http.ResponseWriter
 				stream.Write([]byte(fmt.Sprintf("Output: %s", output)))
 			}
 		}
+		log.Println("Session finished")
 	}
 }
