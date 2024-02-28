@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/xTaube/vr-controlled-robot-arm/video"
 )
@@ -25,12 +26,19 @@ type CommandHandler struct {
 func (ch *CommandHandler) Handle(command CommandIdentifier) (string, error) {
 	switch command {
 		case StartVideoStream:
+			log.Println("Turning stream on...")
 			rtspServerAddress, err := ch.videoStream.Start()
-			return fmt.Sprintf("Streaming to %s", rtspServerAddress), err
+			if err != nil {
+				return "", err
+			}
+			log.Printf("Streaming to %s", rtspServerAddress)
+			return fmt.Sprintf("Stream available on %s", rtspServerAddress), nil
 		
 		case StopVideoStream:
+			log.Println("Shutting off stream...")
 			err := ch.videoStream.Stop()
-			return "Stream is down", err
+			log.Println("Stream stopped")
+			return "Stream disabled", err
 		
 		default:
 			return "", &CommandNotFound{}
