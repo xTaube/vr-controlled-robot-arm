@@ -6,13 +6,19 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gorilla/websocket"
 	"github.com/quic-go/webtransport-go"
 	"github.com/xTaube/vr-controlled-robot-arm/video"
 )
 
 const BUFF_SIZE = 128
 
-func ControlRequestHandler(server *webtransport.Server) func(http.ResponseWriter, *http.Request) {
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  BUFF_SIZE,
+	WriteBufferSize: BUFF_SIZE,
+}
+
+func WebTransportControlRequestHandler(server *webtransport.Server) func(http.ResponseWriter, *http.Request) {
 	log.Println("ControlRequestHander registered")
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -35,6 +41,7 @@ func ControlRequestHandler(server *webtransport.Server) func(http.ResponseWriter
 		log.Println("Stream accepted")
 		defer stream.Close()
 
+		log.Println("Initializing camera...")
 		videoStream := video.InitVideoStream(
 			os.Getenv("CAMERA_DEVICE_PATH"),
 			video.Resoulution{Width: 1920, Height: 1080},
@@ -43,6 +50,7 @@ func ControlRequestHandler(server *webtransport.Server) func(http.ResponseWriter
 			"rtsp://localhost:8554/video/feed",
 		)
 		defer videoStream.Stop()
+		log.Println("Camera initialized")
 
 		commandHandler := InitCommandHandler(videoStream)
 		for {
@@ -63,4 +71,44 @@ func ControlRequestHandler(server *webtransport.Server) func(http.ResponseWriter
 		}
 		log.Println("Session finished")
 	}
+}
+
+func WebSocketControlRequestHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("Upgrading session...")
+	connection, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Printf("Error upgrading to websocket:%s\n", err)
+		return
+	}
+	log.Println("Session upgraded to WebSocket")
+	defer connection.Close()
+
+	log.Println("Initializing camera...")
+	videoStream := video.InitVideoStream(
+		os.Getenv("CAMERA_DEVICE_PATH"),
+		video.Resoulution{Width: 1920, Height: 1080},
+		video.FPS30,
+		video.MJPEG,
+		"rtsp://localhost:8554/video/feed",
+	)
+	defer videoStream.Stop()
+	log.Println("Camera initialized")
+
+	commandHandler := InitCommandHandler(videoStream)
+	for {
+		mt, message, err := connection.ReadMessage()
+		if err != nil {
+			break
+		}
+
+		log.Printf("Recived from connection: %s, type: %d", message, mt)
+		output, err := commandHandler.Handle(CommandIdentifier((message[0]-48)))
+		if err != nil {
+			log.Printf("Error occured: %s", err)
+			connection.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("Error: %s", err)))
+		} else {
+			connection.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("Output: %s", output)))
+		}
+	}
+	log.Println("Session finished")
 }

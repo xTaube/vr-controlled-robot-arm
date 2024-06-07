@@ -24,6 +24,7 @@ type CommandHandler struct {
 }
 
 func (ch *CommandHandler) Handle(command CommandIdentifier) (string, error) {
+	log.Printf("Incoming: %d\n", command)
 	switch command {
 		case StartVideoStream:
 			log.Println("Turning stream on...")
