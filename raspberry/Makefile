@@ -1,6 +1,7 @@
+CURRENT_DIR=$(shell pwd)
 
-BINARY_NAME=build/exec
-SOURCE_FILE=main.go
+BINARY_NAME=$(CURRENT_DIR)/build/exec
+SOURCE_FILE=$(CURRENT_DIR)/main.go
 
 
 compile:
