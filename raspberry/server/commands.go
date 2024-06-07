@@ -8,6 +8,7 @@ import (
 )
 
 type CommandNotFound struct{}
+
 func (err *CommandNotFound) Error() string {
 	return "Command not found"
 }
@@ -15,7 +16,7 @@ func (err *CommandNotFound) Error() string {
 type CommandIdentifier byte
 
 const (
-	StartVideoStream CommandIdentifier = iota+1
+	StartVideoStream CommandIdentifier = iota + 1
 	StopVideoStream
 )
 
@@ -26,23 +27,23 @@ type CommandHandler struct {
 func (ch *CommandHandler) Handle(command CommandIdentifier) (string, error) {
 	log.Printf("Incoming: %d\n", command)
 	switch command {
-		case StartVideoStream:
-			log.Println("Turning stream on...")
-			rtspServerAddress, err := ch.videoStream.Start()
-			if err != nil {
-				return "", err
-			}
-			log.Printf("Streaming to %s", rtspServerAddress)
-			return fmt.Sprintf("Stream available on %s", rtspServerAddress), nil
-		
-		case StopVideoStream:
-			log.Println("Shutting off stream...")
-			err := ch.videoStream.Stop()
-			log.Println("Stream stopped")
-			return "Stream disabled", err
-		
-		default:
-			return "", &CommandNotFound{}
+	case StartVideoStream:
+		log.Println("Turning stream on...")
+		rtspServerAddress, err := ch.videoStream.Start()
+		if err != nil {
+			return "", err
+		}
+		log.Printf("Streaming to %s", rtspServerAddress)
+		return fmt.Sprintf("Stream available on %s", rtspServerAddress), nil
+
+	case StopVideoStream:
+		log.Println("Shutting off stream...")
+		err := ch.videoStream.Stop()
+		log.Println("Stream stopped")
+		return "Stream disabled", err
+
+	default:
+		return "", &CommandNotFound{}
 	}
 }
 

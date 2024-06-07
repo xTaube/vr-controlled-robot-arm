@@ -1,5 +1,4 @@
 #include <AccelStepper.h>
-#include <MultiStepper.h>
 #include <Servo.h>
 
 #define DEG_PER_STEP 0.1125
