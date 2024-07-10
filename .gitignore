@@ -22,3 +22,7 @@ go.work
 .env
 build/
 stream-logs/
+
+#vscode
+.vscode
+.DS_Store
