@@ -8,7 +8,9 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/quic-go/webtransport-go"
+	"github.com/xTaube/vr-controlled-robot-arm/robot"
 	"github.com/xTaube/vr-controlled-robot-arm/video"
+	"go.bug.st/serial"
 )
 
 const BUFF_SIZE = 128
@@ -52,7 +54,23 @@ func WebTransportControlRequestHandler(server *webtransport.Server) func(http.Re
 		defer videoStream.Stop()
 		log.Println("Camera initialized")
 
-		commandHandler := InitCommandHandler(videoStream)
+		log.Printf("Initializing uart...")
+		uart, err := robot.InitUart(
+			os.Getenv("UART_PORT"),
+			115200,
+			serial.EvenParity,
+			8,
+			serial.OneStopBit,
+		)
+		if err != nil {
+			log.Printf("Failed to initialize uart")
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		defer uart.Close()
+		log.Println("Uart initialized")
+
+		commandHandler := InitCommandHandler(videoStream, uart)
 		for {
 			buf := make([]byte, BUFF_SIZE)
 			log.Println("Waiting for message...")
@@ -94,7 +112,23 @@ func WebSocketControlRequestHandler(w http.ResponseWriter, r *http.Request) {
 	defer videoStream.Stop()
 	log.Println("Camera initialized")
 
-	commandHandler := InitCommandHandler(videoStream)
+	log.Printf("Initializing uart...")
+	uart, err := robot.InitUart(
+		os.Getenv("UART_PORT"),
+		115200,
+		serial.EvenParity,
+		8,
+		serial.OneStopBit,
+	)
+	if err != nil {
+		log.Printf("Failed to initialize uart")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	defer uart.Close()
+	log.Println("Uart initialized")
+
+	commandHandler := InitCommandHandler(videoStream, uart)
 	for {
 		mt, message, err := connection.ReadMessage()
 		if err != nil {
@@ -102,7 +136,7 @@ func WebSocketControlRequestHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		log.Printf("Recived from connection: %s, type: %d", message, mt)
-		output, err := commandHandler.Handle(CommandIdentifier((message[0]-48)))
+		output, err := commandHandler.Handle(CommandIdentifier((message[0] - 48)))
 		if err != nil {
 			log.Printf("Error occured: %s", err)
 			connection.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("Error: %s", err)))

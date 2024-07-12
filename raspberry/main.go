@@ -7,12 +7,11 @@ import (
 	"github.com/xTaube/vr-controlled-robot-arm/server"
 )
 
-
 func main() {
 	// err = server.RunWebTransportServer(
-		// os.Getenv("PORT"),
-		// os.Getenv("CERT_PATH"),
-		// os.Getenv("KEY_PATH"),
+	// os.Getenv("PORT"),
+	// os.Getenv("CERT_PATH"),
+	// os.Getenv("KEY_PATH"),
 	// )
 	err := server.RunWebSocketServer(os.Getenv("PORT"))
 	if err != nil {

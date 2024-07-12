@@ -22,18 +22,18 @@ func RunWebTransportServer(port string, certFilePath string, keyFilePath string)
 	log.Printf("Starting server on address: %s", server.H3.Addr)
 	err := server.ListenAndServeTLS(certFilePath, keyFilePath)
 	return err
-};
+}
 
 func addWebSocketHandlers() {
 	http.HandleFunc("/control", WebSocketControlRequestHandler)
 }
 
 func RunWebSocketServer(port string) error {
-	addWebSocketHandlers();
+	addWebSocketHandlers()
 	log.Printf("Starting server on address: :%s", port)
 	err := http.ListenAndServe(
 		fmt.Sprintf(":%s", port),
 		nil,
 	)
-	return err;
-};	
+	return err
+}

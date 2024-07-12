@@ -8,13 +8,15 @@ import (
 	"time"
 )
 
-type StreamOnError struct {}
+type StreamOnError struct{}
+
 func (err *StreamOnError) Error() string {
 	return "Stream is already on"
 }
 
-type StreamOffError struct {}
-func(err *StreamOffError) Error() string {
+type StreamOffError struct{}
+
+func (err *StreamOffError) Error() string {
 	return "Stream is already off"
 }
 
@@ -31,17 +33,17 @@ const (
 )
 
 type Resoulution struct {
-	Width int
+	Width  int
 	Height int
 }
 
 type VideoStream struct {
-	device string
-	resolution Resoulution
-	framerate Framerate
-	inputFormat InputFormat
+	device             string
+	resolution         Resoulution
+	framerate          Framerate
+	inputFormat        InputFormat
 	outputServerAddres string
-	ffmpegProcess *exec.Cmd
+	ffmpegProcess      *exec.Cmd
 }
 
 func (vs *VideoStream) Start() (string, error) {
@@ -56,23 +58,23 @@ func (vs *VideoStream) Start() (string, error) {
 
 	vs.ffmpegProcess = exec.Command(
 		"ffmpeg",
-		"-f", 
-		"v4l2", 
-		"-framerate", 
+		"-f",
+		"v4l2",
+		"-framerate",
 		fmt.Sprintf("%d", vs.framerate),
 		"-re",
-		"-stream_loop", 
-		"-1", 
-		"-video_size", 
+		"-stream_loop",
+		"-1",
+		"-video_size",
 		fmt.Sprintf("%dx%d", vs.resolution.Height, vs.resolution.Width),
-		"-input_format", 
+		"-input_format",
 		string(vs.inputFormat),
 		"-i",
-		vs.device, 
-		"-c", 
-		"copy", 
-		"-f", 
-		"rtsp", 
+		vs.device,
+		"-c",
+		"copy",
+		"-f",
+		"rtsp",
 		vs.outputServerAddres,
 	)
 
@@ -91,7 +93,7 @@ func (vs *VideoStream) Stop() error {
 	if vs.ffmpegProcess == nil {
 		return &StreamOffError{}
 	}
-	
+
 	err := vs.ffmpegProcess.Process.Kill()
 	if err != nil {
 		return err
@@ -102,17 +104,17 @@ func (vs *VideoStream) Stop() error {
 
 func InitVideoStream(
 	device string,
-	resolution Resoulution, 
+	resolution Resoulution,
 	framerate Framerate,
 	inputFormat InputFormat,
 	outputServerAddres string,
 ) *VideoStream {
 	return &VideoStream{
-		device: device, 
-		resolution: resolution,
-		framerate: framerate,
-		inputFormat: inputFormat,
+		device:             device,
+		resolution:         resolution,
+		framerate:          framerate,
+		inputFormat:        inputFormat,
 		outputServerAddres: outputServerAddres,
-		ffmpegProcess: nil,
+		ffmpegProcess:      nil,
 	}
 }
