@@ -1,8 +1,8 @@
-SCRIPTS_DIR=vr-controlled-robot-arm/robot/scripts
-ARDUINO_CLI_DIR=arduino-cli/bin
+SCRIPTS_DIR=v-arm/vr-controlled-robot-arm/robot/scripts
+ARDUINO_CLI_DIR=local/bin
 
 remote-deploy:
-	ssh raspberry $(SCRIPTS_DIR)/remote_deploy.sh -b $(target_branch) -p $(port)
+	ssh raspberry $(SCRIPTS_DIR)/robot_remote_deploy.sh -b $(target_branch) -p $(port)
 
 
 list-available-boards:

@@ -23,15 +23,12 @@ do
     esac
 done
 
-arduino_cli_dir="$(pwd)/arduino-cli/bin/"
+ARDUINO_CLI_BIN=$PWD/local/bin
 
-cd vr-controlled-robot-arm
+cd $PWD/v-arm/vr-controlled-robot-arm
 
-echo "Target branch: $target_branch"
-echo "Port: $port"
+git checkout -f $target_branch > /dev/null
+git pull > /dev/null
 
-git checkout -f $target_branch
-git pull
-
-$arduino_cli_dir/arduino-cli compile --fqbn arduino:avr:uno robot
-$arduino_cli_dir/arduino-cli upload -p $port --fqbn arduino:avr:uno robot
+$ARDUINO_CLI_BIN/arduino-cli compile --fqbn arduino:avr:uno robot
+$ARDUINO_CLI_BIN/arduino-cli upload -p $port --fqbn arduino:avr:uno robot
