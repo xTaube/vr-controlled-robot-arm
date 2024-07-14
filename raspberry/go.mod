@@ -1,10 +1,9 @@
 module github.com/xTaube/vr-controlled-robot-arm
 
-go 1.22.0
+go 1.22.5
 
 require (
 	github.com/gorilla/websocket v1.5.1
-	github.com/joho/godotenv v1.5.1
 	github.com/quic-go/quic-go v0.41.0
 	github.com/quic-go/webtransport-go v0.6.0
 )

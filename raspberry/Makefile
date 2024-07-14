@@ -3,6 +3,12 @@ CURRENT_DIR=$(shell pwd)
 BINARY_NAME=$(CURRENT_DIR)/build/exec
 SOURCE_FILE=$(CURRENT_DIR)/main.go
 
+RPI_PROJECT_LOCATION=/home/majkel/v-arm
+BINARY_RPI_LOCATION_TEMP=$(RPI_PROJECT_LOCATION)/server-build/temp/exec
+RPI_SCRIPTS_LOCATION=$(RPI_PROJECT_LOCATION)/vr-controlled-robot-arm/raspberry/scripts
+
+ROBOT_SERVER_SERVICE_NAME=robot-server
+
 
 compile:
 	go build -o $(BINARY_NAME) $(SOURCE_FILE)
@@ -12,3 +18,8 @@ clean:
 
 run:
 	$(BINARY_NAME)
+
+server-remote-deploy:
+	env GOARCH=arm64 GOOS=linux go build -o $(BINARY_NAME) $(SOURCE_FILE)
+	scp $(BINARY_NAME) raspberry:$(BINARY_RPI_LOCATION_TEMP)
+	ssh raspberry sudo $(RPI_SCRIPTS_LOCATION)/update_and_restart_robot_server_service.sh
