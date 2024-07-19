@@ -8,42 +8,52 @@ import (
 
 const UART_BUFFER_LEN = 256
 
-type NoDataAvailableError struct{}
-
-func (err *NoDataAvailableError) Error() string {
-	return "No data available on port"
+type UartConfig struct {
+	PortName string
+	Parity   serial.Parity
+	StopBits serial.StopBits
+	DataBits int
+	BaudRate int
 }
 
 type UartBuffer struct {
 	buff       []byte
 	bytes_read int
+	terminationByte byte
 }
 
 func initUartBuffer() *UartBuffer {
 	buffer := UartBuffer{
 		buff:       make([]byte, UART_BUFFER_LEN),
 		bytes_read: 0,
+		terminationByte: byte(0x04),
 	}
 
 	return &buffer
 }
 
 func (ub *UartBuffer) load(port serial.Port) error {
-	bytes_read, err := port.Read(ub.buff)
+	totalBytes := 0
+	for {
+		tempBuff := make([]byte, 1)
+		_, err := port.Read(tempBuff[:])
+		if err != nil {
+			return err
+		}
 
-	if err != nil {
-		return err
+		if tempBuff[0] == ub.terminationByte {
+			break
+		}
+
+		ub.buff[totalBytes] = tempBuff[0]
+		totalBytes++
 	}
 
-	ub.bytes_read = bytes_read
-	if bytes_read == 0 {
-		return &NoDataAvailableError{}
-	}
-
+	ub.bytes_read = totalBytes
 	return nil
 }
 
-func (ub *UartBuffer) get() []byte {
+func (ub *UartBuffer) Read() []byte {
 	return ub.buff[:ub.bytes_read]
 }
 
@@ -53,19 +63,10 @@ type Uart struct {
 	buffer   *UartBuffer
 }
 
-func InitUart(
+func initUart(
 	portName string,
-	baudRate int,
-	parity serial.Parity,
-	dataBits int,
-	stopBits serial.StopBits,
+	mode *serial.Mode,
 ) (*Uart, error) {
-	mode := &serial.Mode{
-		BaudRate: baudRate,
-		Parity:   parity,
-		DataBits: dataBits,
-		StopBits: stopBits,
-	}
 	port, err := serial.Open(portName, mode)
 	if err != nil {
 		return nil, err
@@ -89,14 +90,21 @@ func (u *Uart) Close() error {
 	return nil
 }
 
-func (u *Uart) Send(message string) (string, error) {
-	if _, err := u.port.Write([]byte(message)); err != nil {
-		return "", err
+func (u *Uart) Send(data []byte) error {
+	data = append(data, u.buffer.terminationByte) // Add EOT byte
+	if _, err := u.port.Write(data); err != nil {
+		log.Printf("UART: writing data resulted in error: %s\n", err)
+		return err
 	}
+	u.port.Drain()
 
-	if err := u.buffer.load(u.port); err != nil {
-		return "", err
+	return nil
+}
+
+func (u *Uart) Get() ([]byte, error) {
+	err := u.buffer.load(u.port)
+	if err != nil {
+		return nil, err
 	}
-
-	return string(u.buffer.get()), nil
+	return u.buffer.Read(), nil
 }

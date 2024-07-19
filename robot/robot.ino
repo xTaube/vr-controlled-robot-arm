@@ -17,6 +17,7 @@
 #define W_SERVO_PWM_PIN 6
 #define GRIPPER_MOTOR_B1_PIN 3
 #define GRIPPER_MOTOR_B2_PIN 11
+#define END_OF_TRANSMISSION 0x04
 
 const float STEPS_PER_ONE_DEGREE = 1/DEG_PER_STEP;
 
@@ -130,17 +131,9 @@ void send_back(MoveJointsCommand *command) {
   Serial.write(wbuffer, 22);
 }
 
-uint8_t temp_buf[1];
-
 void loop() {
   if (Serial.available() > 0) {
-    uint8_t total_bytes = 0;
-    while(1) {
-      Serial.readBytes(temp_buf, 1);
-      if (temp_buf[0] == 0x04) break;
-      rbuffer[total_bytes++] = temp_buf[0];
-    }
-
+    Serial.readBytesUntil(END_OF_TRANSMISSION, rbuffer, UART_BUFFER_SIZE);
     switch (rbuffer[0])
     {
       case MOVE_JOINTS_COMMAND:

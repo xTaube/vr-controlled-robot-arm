@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -21,7 +22,7 @@ var upgrader = websocket.Upgrader{
 }
 
 func WebTransportControlRequestHandler(server *webtransport.Server) func(http.ResponseWriter, *http.Request) {
-	log.Println("ControlRequestHander registered")
+	log.Println("ControlRequestHander registered.")
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("Upgrading session...")
@@ -31,7 +32,7 @@ func WebTransportControlRequestHandler(server *webtransport.Server) func(http.Re
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		log.Println("Session upgraded to WebTransport")
+		log.Println("Session upgraded to WebTransport.")
 
 		log.Println("Accepting stream...")
 		stream, err := session.AcceptStream(r.Context())
@@ -40,7 +41,7 @@ func WebTransportControlRequestHandler(server *webtransport.Server) func(http.Re
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		log.Println("Stream accepted")
+		log.Println("Stream accepted.")
 		defer stream.Close()
 
 		log.Println("Initializing camera...")
@@ -52,25 +53,26 @@ func WebTransportControlRequestHandler(server *webtransport.Server) func(http.Re
 			"rtsp://localhost:8554/video/feed",
 		)
 		defer videoStream.Stop()
-		log.Println("Camera initialized")
+		log.Println("Camera initialized.")
 
-		log.Printf("Initializing uart...")
-		uart, err := robot.InitUart(
-			os.Getenv("UART_PORT"),
-			115200,
-			serial.EvenParity,
-			8,
-			serial.OneStopBit,
+		log.Println("Initializing robot arm...")
+		robot, err := robot.InitRobot(
+			robot.UartConfig{
+				PortName: os.Getenv("UART_PORT"),
+				Parity:   serial.EvenParity,
+				StopBits: serial.OneStopBit,
+				BaudRate: 115200,
+				DataBits: 8,
+			},
 		)
 		if err != nil {
-			log.Printf("Failed to initialize uart")
-			w.WriteHeader(http.StatusInternalServerError)
+			log.Printf("Error initializing robot arm: %s.\n", err)
 			return
 		}
-		defer uart.Close()
-		log.Println("Uart initialized")
+		defer robot.ShutDown()
+		log.Println("Robot arm initialized.")
 
-		commandHandler := InitCommandHandler(videoStream, uart)
+		commandHandler := InitCommandHandler(videoStream, robot)
 		for {
 			buf := make([]byte, BUFF_SIZE)
 			log.Println("Waiting for message...")
@@ -78,11 +80,11 @@ func WebTransportControlRequestHandler(server *webtransport.Server) func(http.Re
 			if err != nil {
 				break
 			}
-			log.Printf("Recived from stream %v: %s\n", stream.StreamID(), buf[:n])
-			output, err := commandHandler.Handle(CommandIdentifier((buf[0] - 48)))
+			command_id, args := ParseRequestArguments(string(buf[:n]))
+			output, err := commandHandler.Handle(command_id, args)
 			if err != nil {
-				log.Printf("Error occured: %s", err)
-				stream.Write([]byte(fmt.Sprintf("Error: %s", err)))
+				log.Printf("Error occured: %s.", err)
+				webtransportHandlerError(stream, err)
 			} else {
 				stream.Write([]byte(fmt.Sprintf("Output: %s", output)))
 			}
@@ -91,14 +93,22 @@ func WebTransportControlRequestHandler(server *webtransport.Server) func(http.Re
 	}
 }
 
+func webtransportHandlerError(stream webtransport.Stream, err error) {
+	if errors.Is(err, &CommandNotFound{}) {
+		stream.Write(ErrorResponse(UNKNOWN_COMMAND, err))
+	} else {
+		stream.Write(ErrorResponse(UNKNOWN_ERROR, err))
+	}
+}
+
 func WebSocketControlRequestHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Upgrading session...")
 	connection, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Printf("Error upgrading to websocket:%s\n", err)
+		log.Printf("Error upgrading to websocket:%s.\n", err)
 		return
 	}
-	log.Println("Session upgraded to WebSocket")
+	log.Println("Session upgraded to WebSocket.")
 	defer connection.Close()
 
 	log.Println("Initializing camera...")
@@ -110,39 +120,49 @@ func WebSocketControlRequestHandler(w http.ResponseWriter, r *http.Request) {
 		"rtsp://localhost:8554/video/feed",
 	)
 	defer videoStream.Stop()
-	log.Println("Camera initialized")
+	log.Println("Camera initialized.")
 
-	log.Printf("Initializing uart...")
-	uart, err := robot.InitUart(
-		os.Getenv("UART_PORT"),
-		115200,
-		serial.EvenParity,
-		8,
-		serial.OneStopBit,
+	log.Println("Initializing robot arm...")
+	robot, err := robot.InitRobot(
+		robot.UartConfig{
+			PortName: os.Getenv("UART_PORT"),
+			Parity:   serial.EvenParity,
+			StopBits: serial.OneStopBit,
+			BaudRate: 115200,
+			DataBits: 8,
+		},
 	)
 	if err != nil {
-		log.Printf("Failed to initialize uart")
-		w.WriteHeader(http.StatusInternalServerError)
+		log.Printf("Error initializing robot arm: %s.\n", err)
 		return
 	}
-	defer uart.Close()
-	log.Println("Uart initialized")
+	defer robot.ShutDown()
+	log.Println("Robot arm initialized.")
 
-	commandHandler := InitCommandHandler(videoStream, uart)
+	commandHandler := InitCommandHandler(videoStream, robot)
 	for {
-		mt, message, err := connection.ReadMessage()
+		_, request, err := connection.ReadMessage()
 		if err != nil {
 			break
 		}
 
-		log.Printf("Recived from connection: %s, type: %d", message, mt)
-		output, err := commandHandler.Handle(CommandIdentifier((message[0] - 48)))
+		command_id, args := ParseRequestArguments(string(request))
+		result, err := commandHandler.Handle(command_id, args)
 		if err != nil {
 			log.Printf("Error occured: %s", err)
-			connection.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("Error: %s", err)))
+			websocketHandleError(connection, err)
 		} else {
-			connection.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("Output: %s", output)))
+			connection.WriteMessage(websocket.TextMessage, result)
 		}
 	}
 	log.Println("Session finished")
+}
+
+
+func websocketHandleError(connection *websocket.Conn, err error) {
+	if errors.Is(err, &CommandNotFound{}) {
+		connection.WriteMessage(websocket.TextMessage, ErrorResponse(UNKNOWN_COMMAND, err))
+	} else {
+		connection.WriteMessage(websocket.TextMessage, ErrorResponse(UNKNOWN_ERROR, err))
+	}
 }

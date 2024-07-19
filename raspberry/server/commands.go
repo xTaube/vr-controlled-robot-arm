@@ -3,58 +3,83 @@ package server
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/xTaube/vr-controlled-robot-arm/robot"
 	"github.com/xTaube/vr-controlled-robot-arm/video"
 )
 
-type CommandNotFound struct{}
-
-func (err *CommandNotFound) Error() string {
-	return "Command not found"
-}
-
 type CommandIdentifier byte
 
+type CommandNotFound struct {
+	code CommandIdentifier
+}
+
+func (err *CommandNotFound) Error() string {
+	return fmt.Sprintf("Command with identifier: %d not found.", err.code)
+}
+
 const (
-	StartVideoStream CommandIdentifier = iota + 1
-	StopVideoStream
-	SendMessageViaUart
+	START_VIDEO_STREAM CommandIdentifier = iota + 1
+	STOP_VIDEO_STREAM
+	MOVE_ARM
 )
 
 type CommandHandler struct {
 	videoStream *video.VideoStream
-	uart        *robot.Uart
+	robot       *robot.Robot
 }
 
-func (ch *CommandHandler) Handle(command CommandIdentifier) (string, error) {
-	log.Printf("Incoming: %d\n", command)
-	switch command {
-	case StartVideoStream:
-		log.Println("Turning stream on...")
-		rtspServerAddress, err := ch.videoStream.Start()
-		if err != nil {
-			return "", err
-		}
-		log.Printf("Streaming to %s", rtspServerAddress)
-		return fmt.Sprintf("Stream available on %s", rtspServerAddress), nil
+func (ch *CommandHandler) Handle(command_id CommandIdentifier, args []string) ([]byte, error) {
+	log.Printf("Incoming command identitfier: %d\n", command_id)
+	switch command_id {
+	case START_VIDEO_STREAM:
+		return ch.startVideoStreamCommandHandler()
 
-	case StopVideoStream:
-		log.Println("Shutting off stream...")
-		err := ch.videoStream.Stop()
-		log.Println("Stream stopped")
-		return "Stream disabled", err
+	case STOP_VIDEO_STREAM:
+		return ch.stopVideoStreamCommandHandler()
 
-	case SendMessageViaUart:
-		log.Println("Sending message")
-		resp, err := ch.uart.Send("Hello robot!")
-		return resp, err
+	case MOVE_ARM:
+		return ch.moveArmCommandHandler(args)
 
 	default:
-		return "", &CommandNotFound{}
+		return nil, &CommandNotFound{command_id}
 	}
 }
 
-func InitCommandHandler(videoStream *video.VideoStream, uart *robot.Uart) *CommandHandler {
-	return &CommandHandler{videoStream: videoStream, uart: uart}
+func (ch *CommandHandler) moveArmCommandHandler(command_args []string) ([]byte, error) {
+	log.Printf("Attempt to move arm by translation: [%s].\n", strings.Join(command_args, ", "))
+	result := ch.robot.Move(
+		robot.JointsTranslations{
+			X: readFloat32(command_args[0]),
+			Y: readFloat32(command_args[1]),
+			Z: readFloat32(command_args[2]),
+			V: readFloat32(command_args[3]),
+			W: readFloat32(command_args[4]),
+		},
+	)
+	log.Println("Attempt finished.")
+	return SuccessResponse(OK, ""), result.Err
+}
+
+func (ch *CommandHandler) startVideoStreamCommandHandler() ([]byte, error) {
+	log.Println("Turning stream on...")
+	rtspServerAddress, err := ch.videoStream.Start()
+	if err != nil {
+		return nil, err
+	}
+
+	log.Printf("Streaming to %s.\n", rtspServerAddress)
+	return SuccessResponse(OK, fmt.Sprintf("Stream available on %s.", rtspServerAddress)), nil
+}
+
+func (ch *CommandHandler) stopVideoStreamCommandHandler() ([]byte, error) {
+	log.Println("Shutting off the stream...")
+	err := ch.videoStream.Stop()
+	log.Println("Stream stopped.")
+	return SuccessResponse(OK, "Stream disabled."), err
+}
+
+func InitCommandHandler(videoStream *video.VideoStream, robot *robot.Robot) *CommandHandler {
+	return &CommandHandler{videoStream: videoStream, robot: robot}
 }
