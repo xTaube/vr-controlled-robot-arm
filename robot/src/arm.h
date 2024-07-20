@@ -20,26 +20,21 @@
 #define GRIPPER_MOTOR_B2_PIN 11
 
 typedef enum {
-    MOVE_ACTION = 1
+    SET_NEW_ARM_POSITION = 1
 } ACTION_TYPE;
 
 typedef enum {
     RESULT_OK = 1,
-    RESULT_INVALID_NUMBER_OF_PARAMETERS = 2,
-    RESULT_UNKNOWN_ACTION = 3
+    RESULT_INVALID_NUMBER_OF_PARAMETERS = 10,
+    RESULT_UNKNOWN_ACTION = 11
 }  RESULT_CODE;
 
-union JointTranslation {
-    float f;
-    byte b[4];
-};
-
 typedef struct {
-    JointTranslation x;
-    JointTranslation y;
-    JointTranslation z;
-    JointTranslation v;
-    JointTranslation w;
+    float x;
+    float y;
+    float z;
+    float v;
+    float w;
 } JointTranslations;
 
 
@@ -56,6 +51,7 @@ struct Arm {
     ArmState state;
 };
 
-RESULT_CODE move_arm(Arm *arm, JointTranslations *translations, JointTranslations *fallback);
+RESULT_CODE set_new_arm_position(Arm *arm, JointTranslations *translations, JointTranslations *fallback);
+void move_arm_steppers(Arm *arm);
 
 #endif

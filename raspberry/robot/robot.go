@@ -8,17 +8,28 @@ import (
 	"go.bug.st/serial"
 )
 
-type RobotCode uint8
+type RobotErrorCode uint8
 
 const (
-	ROBOT_OK = iota
-	ROBOT_CALIBRATION_NEEDED
+	ROBOT_INVALID_NUMBER_OF_PARAMETERS RobotErrorCode = iota + 10
+	ROBOT_UNKNOWN_ACTION
 	ROBOT_COMMUNICATION_ERROR
 )
 
-type RobotActionResult struct {
-	Code RobotCode
+type RobotError struct {
+	Code RobotErrorCode
 	Err  error
+}
+
+func (err *RobotError) Error() string {
+	switch(err.Code) {
+	case ROBOT_INVALID_NUMBER_OF_PARAMETERS:
+		return "Invalid number of parameters."
+	case ROBOT_UNKNOWN_ACTION:
+		return "Unknown action."
+	default:
+		return err.Err.Error()
+	}
 }
 
 type ActionId uint8
@@ -54,7 +65,7 @@ type Robot struct {
 	uart *Uart
 }
 
-func (r *Robot) Move(jointsTranslations JointsTranslations) RobotActionResult {
+func (r *Robot) Move(jointsTranslations JointsTranslations) (*JointsTranslations, error) {
 	data := make([]byte, W_JOINT_VALUE_OFFSET+W_JOINT_VALUE_SIZE)
 
 	data[ACTION_ID_OFFSET] = byte(MOVE_ACTION)
@@ -79,29 +90,40 @@ func (r *Robot) Move(jointsTranslations JointsTranslations) RobotActionResult {
 		math.Float32bits(jointsTranslations.W),
 	)
 
-	log.Printf("Bytes sent: \t %v \n", data)
-
 	err := r.uart.Send(data)
 	if err != nil {
-		return RobotActionResult{Code: ROBOT_COMMUNICATION_ERROR, Err: err}
+		return nil, &RobotError{ROBOT_COMMUNICATION_ERROR, err}
 	}
 
-	data1, err := r.uart.Get()
+	result, err := r.uart.Get()
 	if err != nil {
-		return RobotActionResult{Code: ROBOT_COMMUNICATION_ERROR, Err: err}
+		return nil, &RobotError{ROBOT_COMMUNICATION_ERROR, err}
 	}
 
-	log.Printf("Bytes received: \t %d \n", len(data1))
-
+	result_code := result[0]
 	log.Println("UART received data: ")
-	log.Printf("Code: %d\n", data1[0])
-	log.Printf("X: %f\n", math.Float32frombits(binary.BigEndian.Uint32(data1[X_JOINT_VALUE_OFFSET:X_JOINT_VALUE_OFFSET+X_JOINT_VALUE_SIZE])))
-	log.Printf("Y: %f\n", math.Float32frombits(binary.BigEndian.Uint32(data1[Y_JOINT_VALUE_OFFSET:Y_JOINT_VALUE_OFFSET+Y_JOINT_VALUE_SIZE])))
-	log.Printf("Z: %f\n", math.Float32frombits(binary.BigEndian.Uint32(data1[Z_JOINT_VALUE_OFFSET:Z_JOINT_VALUE_OFFSET+Z_JOINT_VALUE_SIZE])))
-	log.Printf("V: %f\n", math.Float32frombits(binary.BigEndian.Uint32(data1[V_JOINT_VALUE_OFFSET:V_JOINT_VALUE_OFFSET+V_JOINT_VALUE_SIZE])))
-	log.Printf("W: %f\n", math.Float32frombits(binary.BigEndian.Uint32(data1[W_JOINT_VALUE_OFFSET:W_JOINT_VALUE_OFFSET+W_JOINT_VALUE_SIZE])))
+	log.Printf("Code: %d\n", result_code)
 
-	return RobotActionResult{Code: RobotCode(data1[0]), Err: nil}
+	switch(result_code) {
+	case byte(ROBOT_INVALID_NUMBER_OF_PARAMETERS):
+		return nil, &RobotError{ROBOT_INVALID_NUMBER_OF_PARAMETERS, nil}
+	case byte(ROBOT_UNKNOWN_ACTION):
+		return nil, &RobotError{ROBOT_UNKNOWN_ACTION, nil}
+	default:
+		fallback := JointsTranslations{
+			X: math.Float32frombits(binary.BigEndian.Uint32(result[X_JOINT_VALUE_OFFSET:X_JOINT_VALUE_OFFSET+X_JOINT_VALUE_SIZE])),
+			Y: math.Float32frombits(binary.BigEndian.Uint32(result[Y_JOINT_VALUE_OFFSET:Y_JOINT_VALUE_OFFSET+Y_JOINT_VALUE_SIZE])),
+			Z: math.Float32frombits(binary.BigEndian.Uint32(result[Z_JOINT_VALUE_OFFSET:Z_JOINT_VALUE_OFFSET+Z_JOINT_VALUE_SIZE])),
+			V: math.Float32frombits(binary.BigEndian.Uint32(result[V_JOINT_VALUE_OFFSET:V_JOINT_VALUE_OFFSET+V_JOINT_VALUE_SIZE])),
+			W: math.Float32frombits(binary.BigEndian.Uint32(result[W_JOINT_VALUE_OFFSET:W_JOINT_VALUE_OFFSET+W_JOINT_VALUE_SIZE])),
+		}
+		log.Printf("X: %f\n", fallback.X)
+		log.Printf("Y: %f\n", fallback.Y)
+		log.Printf("Z: %f\n", fallback.Z)
+		log.Printf("V: %f\n", fallback.V)
+		log.Printf("W: %f\n", fallback.W)
+		return &fallback, nil
+	}
 }
 
 func (r *Robot) ShutDown() {

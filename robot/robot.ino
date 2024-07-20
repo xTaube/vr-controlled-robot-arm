@@ -61,7 +61,7 @@ void loop() {
     loaded_bytes = Serial.readBytesUntil(END_OF_TRANSMISSION, buffer, UART_BUFFER_SIZE);
     switch (buffer[0])
     {
-      case MOVE_ACTION:
+      case SET_NEW_ARM_POSITION:
         JointTranslations *translations = (JointTranslations*) malloc(sizeof(JointTranslations));
         result_code = load_translations_from_buffer(buffer, loaded_bytes, translations);
         clear_buffer(buffer);
@@ -73,7 +73,7 @@ void loop() {
         }
 
         JointTranslations *fallback = (JointTranslations*) malloc(sizeof(JointTranslations));
-        result_code = move_arm(&arm, translations, fallback);
+        result_code = set_new_arm_position(&arm, translations, fallback);
         loaded_bytes = load_result_with_fallback_to_buffer(buffer, result_code, fallback);
         send_result(loaded_bytes);
 
@@ -88,4 +88,5 @@ void loop() {
 
     clear_buffer(buffer);
   }
+  move_arm_steppers(&arm);
 }

@@ -28,22 +28,22 @@ RESULT_CODE load_translations_from_buffer(uint8_t *buffer, size_t buffer_len, Jo
         return RESULT_INVALID_NUMBER_OF_PARAMETERS;
     }
 
-    memcpy(translations->x.b, buffer+X_JOINT_TRANSLATION_OFFSET, X_JOINT_TRANSLATION_SIZE);
-    memcpy(translations->y.b, buffer+Y_JOINT_TRANSLATION_OFFSET, Y_JOINT_TRANSLATION_SIZE);
-    memcpy(translations->z.b, buffer+Z_JOINT_TRANSLATION_OFFSET, Z_JOINT_TRANSLATION_SIZE);
-    memcpy(translations->v.b, buffer+V_JOINT_TRANSLATION_OFFSET, V_JOINT_TRANSLATION_SIZE);
-    memcpy(translations->w.b, buffer+W_JOINT_TRANSLATION_OFFSET, W_JOINT_TRANSLATION_SIZE);
+    memcpy(&(translations->x), buffer+X_JOINT_TRANSLATION_OFFSET, X_JOINT_TRANSLATION_SIZE);
+    memcpy(&(translations->y), buffer+Y_JOINT_TRANSLATION_OFFSET, Y_JOINT_TRANSLATION_SIZE);
+    memcpy(&(translations->z), buffer+Z_JOINT_TRANSLATION_OFFSET, Z_JOINT_TRANSLATION_SIZE);
+    memcpy(&(translations->v), buffer+V_JOINT_TRANSLATION_OFFSET, V_JOINT_TRANSLATION_SIZE);
+    memcpy(&(translations->w), buffer+W_JOINT_TRANSLATION_OFFSET, W_JOINT_TRANSLATION_SIZE);
 
     return RESULT_OK;
 }
 
 size_t load_result_with_fallback_to_buffer(uint8_t *buffer, RESULT_CODE code, JointTranslations *translations) {
     buffer[0] = code;
-    memcpy(buffer+X_JOINT_TRANSLATION_OFFSET, translations->x.b, X_JOINT_TRANSLATION_SIZE);
-    memcpy(buffer+Y_JOINT_TRANSLATION_OFFSET, translations->y.b, Y_JOINT_TRANSLATION_SIZE);
-    memcpy(buffer+Z_JOINT_TRANSLATION_OFFSET, translations->z.b, Z_JOINT_TRANSLATION_SIZE);
-    memcpy(buffer+V_JOINT_TRANSLATION_OFFSET, translations->v.b, V_JOINT_TRANSLATION_SIZE);
-    memcpy(buffer+W_JOINT_TRANSLATION_OFFSET, translations->w.b, W_JOINT_TRANSLATION_SIZE);
+    memcpy(buffer+X_JOINT_TRANSLATION_OFFSET, &(translations->x), X_JOINT_TRANSLATION_SIZE);
+    memcpy(buffer+Y_JOINT_TRANSLATION_OFFSET, &(translations->y), Y_JOINT_TRANSLATION_SIZE);
+    memcpy(buffer+Z_JOINT_TRANSLATION_OFFSET, &(translations->z), Z_JOINT_TRANSLATION_SIZE);
+    memcpy(buffer+V_JOINT_TRANSLATION_OFFSET, &(translations->v), V_JOINT_TRANSLATION_SIZE);
+    memcpy(buffer+W_JOINT_TRANSLATION_OFFSET, &(translations->w), W_JOINT_TRANSLATION_SIZE);
 
     return TOTAL_RESULT_WITH_TRANSLATIONS_SIZE;
 }
