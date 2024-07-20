@@ -17,15 +17,15 @@ type UartConfig struct {
 }
 
 type UartBuffer struct {
-	buff       []byte
-	bytes_read int
+	buff            []byte
+	bytes_read      int
 	terminationByte byte
 }
 
 func initUartBuffer() *UartBuffer {
 	buffer := UartBuffer{
-		buff:       make([]byte, UART_BUFFER_LEN),
-		bytes_read: 0,
+		buff:            make([]byte, UART_BUFFER_LEN),
+		bytes_read:      0,
 		terminationByte: byte(0x04),
 	}
 

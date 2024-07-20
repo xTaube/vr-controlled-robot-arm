@@ -22,7 +22,7 @@ type RobotError struct {
 }
 
 func (err *RobotError) Error() string {
-	switch(err.Code) {
+	switch err.Code {
 	case ROBOT_INVALID_NUMBER_OF_PARAMETERS:
 		return "Invalid number of parameters."
 	case ROBOT_UNKNOWN_ACTION:
@@ -69,23 +69,23 @@ func (r *Robot) Move(jointsTranslations JointsTranslations) (*JointsTranslations
 	data := make([]byte, W_JOINT_VALUE_OFFSET+W_JOINT_VALUE_SIZE)
 
 	data[ACTION_ID_OFFSET] = byte(MOVE_ACTION)
-	binary.BigEndian.PutUint32(
+	binary.LittleEndian.PutUint32(
 		data[X_JOINT_VALUE_OFFSET:X_JOINT_VALUE_OFFSET+X_JOINT_VALUE_SIZE],
 		math.Float32bits(jointsTranslations.X),
 	)
-	binary.BigEndian.PutUint32(
+	binary.LittleEndian.PutUint32(
 		data[Y_JOINT_VALUE_OFFSET:Y_JOINT_VALUE_OFFSET+Y_JOINT_VALUE_SIZE],
 		math.Float32bits(jointsTranslations.Y),
 	)
-	binary.BigEndian.PutUint32(
+	binary.LittleEndian.PutUint32(
 		data[Z_JOINT_VALUE_OFFSET:Z_JOINT_VALUE_OFFSET+Z_JOINT_VALUE_SIZE],
 		math.Float32bits(jointsTranslations.Z),
 	)
-	binary.BigEndian.PutUint32(
+	binary.LittleEndian.PutUint32(
 		data[V_JOINT_VALUE_OFFSET:V_JOINT_VALUE_OFFSET+V_JOINT_VALUE_SIZE],
 		math.Float32bits(jointsTranslations.V),
 	)
-	binary.BigEndian.PutUint32(
+	binary.LittleEndian.PutUint32(
 		data[W_JOINT_VALUE_OFFSET:W_JOINT_VALUE_OFFSET+W_JOINT_VALUE_SIZE],
 		math.Float32bits(jointsTranslations.W),
 	)
@@ -101,21 +101,21 @@ func (r *Robot) Move(jointsTranslations JointsTranslations) (*JointsTranslations
 	}
 
 	result_code := result[0]
+	log.Printf("Bytes received: %v\n", result)
 	log.Println("UART received data: ")
 	log.Printf("Code: %d\n", result_code)
-
-	switch(result_code) {
+	switch result_code {
 	case byte(ROBOT_INVALID_NUMBER_OF_PARAMETERS):
 		return nil, &RobotError{ROBOT_INVALID_NUMBER_OF_PARAMETERS, nil}
 	case byte(ROBOT_UNKNOWN_ACTION):
 		return nil, &RobotError{ROBOT_UNKNOWN_ACTION, nil}
 	default:
 		fallback := JointsTranslations{
-			X: math.Float32frombits(binary.BigEndian.Uint32(result[X_JOINT_VALUE_OFFSET:X_JOINT_VALUE_OFFSET+X_JOINT_VALUE_SIZE])),
-			Y: math.Float32frombits(binary.BigEndian.Uint32(result[Y_JOINT_VALUE_OFFSET:Y_JOINT_VALUE_OFFSET+Y_JOINT_VALUE_SIZE])),
-			Z: math.Float32frombits(binary.BigEndian.Uint32(result[Z_JOINT_VALUE_OFFSET:Z_JOINT_VALUE_OFFSET+Z_JOINT_VALUE_SIZE])),
-			V: math.Float32frombits(binary.BigEndian.Uint32(result[V_JOINT_VALUE_OFFSET:V_JOINT_VALUE_OFFSET+V_JOINT_VALUE_SIZE])),
-			W: math.Float32frombits(binary.BigEndian.Uint32(result[W_JOINT_VALUE_OFFSET:W_JOINT_VALUE_OFFSET+W_JOINT_VALUE_SIZE])),
+			X: math.Float32frombits(binary.LittleEndian.Uint32(result[X_JOINT_VALUE_OFFSET : X_JOINT_VALUE_OFFSET+X_JOINT_VALUE_SIZE])),
+			Y: math.Float32frombits(binary.LittleEndian.Uint32(result[Y_JOINT_VALUE_OFFSET : Y_JOINT_VALUE_OFFSET+Y_JOINT_VALUE_SIZE])),
+			Z: math.Float32frombits(binary.LittleEndian.Uint32(result[Z_JOINT_VALUE_OFFSET : Z_JOINT_VALUE_OFFSET+Z_JOINT_VALUE_SIZE])),
+			V: math.Float32frombits(binary.LittleEndian.Uint32(result[V_JOINT_VALUE_OFFSET : V_JOINT_VALUE_OFFSET+V_JOINT_VALUE_SIZE])),
+			W: math.Float32frombits(binary.LittleEndian.Uint32(result[W_JOINT_VALUE_OFFSET : W_JOINT_VALUE_OFFSET+W_JOINT_VALUE_SIZE])),
 		}
 		log.Printf("X: %f\n", fallback.X)
 		log.Printf("Y: %f\n", fallback.Y)

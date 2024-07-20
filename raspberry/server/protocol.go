@@ -42,7 +42,7 @@ type BaseResponse struct {
 	Code ResponseCode
 }
 
-func(r *BaseResponse) Parse() []byte {
+func (r *BaseResponse) Parse() []byte {
 	return []byte(fmt.Sprintf("%d", r.Code))
 }
 
@@ -74,9 +74,9 @@ func (r *ResponseWithStringArguments) Parse() []byte {
 
 type ErrorResponse struct {
 	Code ErrorCode
-	Err error
+	Err  error
 }
 
-func(er *ErrorResponse) Parse() []byte {
+func (er *ErrorResponse) Parse() []byte {
 	return []byte(fmt.Sprintf("%d$%s", er.Code, er.Err))
 }
