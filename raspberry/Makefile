@@ -3,7 +3,7 @@ CURRENT_DIR=$(shell pwd)
 BINARY_NAME=$(CURRENT_DIR)/build/exec
 SOURCE_FILE=$(CURRENT_DIR)/main.go
 
-RPI_PROJECT_LOCATION=/home/majkel/v-arm
+RPI_PROJECT_LOCATION=v-arm
 BINARY_RPI_LOCATION_TEMP=$(RPI_PROJECT_LOCATION)/server-build/temp/exec
 RPI_SCRIPTS_LOCATION=$(RPI_PROJECT_LOCATION)/vr-controlled-robot-arm/raspberry/scripts
 
@@ -26,3 +26,6 @@ server-remote-deploy:
 
 format:
 	gofmt -s -w .
+ 
+make raspberry-pull-main:
+	ssh raspberry $(RPI_SCRIPTS_LOCATION)/pull_main.sh
