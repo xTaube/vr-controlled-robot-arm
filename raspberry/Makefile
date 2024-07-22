@@ -23,3 +23,6 @@ server-remote-deploy:
 	env GOARCH=arm64 GOOS=linux go build -o $(BINARY_NAME) $(SOURCE_FILE)
 	scp $(BINARY_NAME) raspberry:$(BINARY_RPI_LOCATION_TEMP)
 	ssh raspberry sudo $(RPI_SCRIPTS_LOCATION)/update_and_restart_robot_server_service.sh
+
+format:
+	gofmt -s -w .

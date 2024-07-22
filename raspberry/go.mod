@@ -6,9 +6,11 @@ require (
 	github.com/gorilla/websocket v1.5.1
 	github.com/quic-go/quic-go v0.41.0
 	github.com/quic-go/webtransport-go v0.6.0
+	go.bug.st/serial v1.6.2
 )
 
 require (
+	github.com/creack/goselect v0.1.2 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
 	github.com/google/pprof v0.0.0-20230821062121-407c9e7a662f // indirect
 	github.com/onsi/ginkgo/v2 v2.12.0 // indirect
