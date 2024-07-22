@@ -11,8 +11,8 @@ class RobotGUI:
         self.root.title("Wariat Robot - GUI")
 
         self.gripper_button = None
-        self.send_xyz = None
-        self.send_joints = None
+        self.send_xyz_button = None
+        self.send_joints_button = None
         self.right_sliders = None
         self.left_sliders = None
 
@@ -35,7 +35,6 @@ class RobotGUI:
         self.cap = cv2.VideoCapture(0)  # mozna tu dac stream RTSP
         self.update_video_frame()
 
-
     def get_initial_gripper_status(self) -> bool:
         return True
 
@@ -52,10 +51,11 @@ class RobotGUI:
             slider.grid(row=i, column=0, padx=5, pady=5)
             self.left_sliders.append(slider)
 
-        self.send_joints = ttk.Button(
+        self.send_joints_button = ttk.Button(
             self.left_frame, text="Send commands", command=self.send_joints_commands
         )
-        self.send_joints.grid(row=6, column=0, padx=5, pady=5)
+        self.send_joints_button.grid(row=6, column=0, padx=5, pady=5)
+
     def create_right_panel(self) -> None:
         self.right_sliders = []
         for i in range(3):
@@ -74,10 +74,10 @@ class RobotGUI:
         )
         self.gripper_button.grid(row=3, column=0, padx=5, pady=5)
 
-        self.send_xyz = ttk.Button(
+        self.send_xyz_button = ttk.Button(
             self.right_frame, text="Send commands", command=self.send_xyz_commands
         )
-        self.send_xyz.grid(row=4, column=0, padx=5, pady=5)
+        self.send_xyz_button.grid(row=4, column=0, padx=5, pady=5)
 
     def get_gripper_text(self) -> str:
         return "Open Gripper" if not self.gripper_status else "Close Gripper"
