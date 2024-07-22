@@ -26,3 +26,5 @@ stream-logs/
 #vscode
 .vscode
 .DS_Store
+
+.idea
