@@ -54,6 +54,7 @@ void setup() {
   z_stepper.setCurrentPosition(0);
   z_stepper.setMaxSpeed(MAX_SPEED);
   z_stepper.setAcceleration(SPEED);
+  pinMode(13, OUTPUT);
 }
 
 void loop() {
