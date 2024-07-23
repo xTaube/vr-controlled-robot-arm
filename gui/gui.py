@@ -1,7 +1,9 @@
 import tkinter as tk
-from tkinter import ttk
 import cv2
+import websocket
+import threading
 from PIL import Image, ImageTk
+from tkinter import ttk
 
 
 class RobotGUI:
@@ -34,6 +36,18 @@ class RobotGUI:
         self.video_label.grid(row=0, column=0)
         self.cap = cv2.VideoCapture(0)  # mozna tu dac stream RTSP
         self.update_video_frame()
+
+        # Setup WebSocket
+        self.ws = websocket.WebSocketApp(
+            "ws://localhost:8765",
+            on_message=self.on_message,
+            on_error=self.on_error,
+            on_close=self.on_close,
+        )
+        self.ws.on_open = self.on_open
+        self.ws_thread = threading.Thread(target=self.ws.run_forever)
+        self.ws_thread.daemon = True
+        self.ws_thread.start()
 
     def get_initial_gripper_status(self) -> bool:
         return True
@@ -90,7 +104,8 @@ class RobotGUI:
         pass
 
     def send_joints_commands(self) -> None:
-        pass
+        command = "3" + "$".join(str(slider.get()) for slider in self.left_sliders)
+        self.ws.send(command)
 
     def update_video_frame(self) -> None:
         ret, frame = self.cap.read()
@@ -103,9 +118,22 @@ class RobotGUI:
 
         self.root.after(10, self.update_video_frame)
 
+    def on_message(self, ws, message):
+        print(f"Received message: {message}")
+
+    def on_error(self, ws, error):
+        print(f"Error: {error}")
+
+    def on_close(self, ws):
+        print("WebSocket closed")
+
+    def on_open(self, ws):
+        print("WebSocket connection opened")
+
     def __del__(self):
         if self.cap.isOpened():
             self.cap.release()
+        self.ws.close()
 
 
 def main():
