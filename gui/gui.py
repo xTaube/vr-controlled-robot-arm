@@ -1,22 +1,20 @@
 import tkinter as tk
 import cv2
-import websocket
-import threading
 from PIL import Image, ImageTk
 from tkinter import ttk
+from websocket_client import WsClient
 
 
 class RobotGUI:
     def __init__(self, root: tk.Tk):
-
-        self.root = root
-        self.root.title("Wariat Robot - GUI")
-
         self.gripper_button = None
         self.send_xyz_button = None
         self.send_joints_button = None
         self.right_sliders = None
         self.left_sliders = None
+
+        self.root = root
+        self.root.title("Wariat Robot - GUI")
 
         self.gripper_status = self.get_initial_gripper_status()
 
@@ -31,23 +29,12 @@ class RobotGUI:
         self.right_frame.grid(row=0, column=2, padx=10, pady=10, sticky="n")
         self.create_right_panel()
 
-        # vid capture
         self.video_label = ttk.Label(self.video_frame)
         self.video_label.grid(row=0, column=0)
         self.cap = cv2.VideoCapture(0)  # mozna tu dac stream RTSP
         self.update_video_frame()
 
-        # Setup WebSocket
-        self.ws = websocket.WebSocketApp(
-            "ws://localhost:8765",
-            on_message=self.on_message,
-            on_error=self.on_error,
-            on_close=self.on_close,
-        )
-        self.ws.on_open = self.on_open
-        self.ws_thread = threading.Thread(target=self.ws.run_forever)
-        self.ws_thread.daemon = True
-        self.ws_thread.start()
+        self.websocket_client = WsClient("ws://localhost:8765")
 
     def get_initial_gripper_status(self) -> bool:
         return True
@@ -96,16 +83,17 @@ class RobotGUI:
     def get_gripper_text(self) -> str:
         return "Open Gripper" if not self.gripper_status else "Close Gripper"
 
-    def toggle_gripper(self):
+    def toggle_gripper(self) -> None:
         self.gripper_status = not self.gripper_status
         self.gripper_button.configure(text=self.get_gripper_text())
 
     def send_xyz_commands(self) -> None:
+        """To be implemented"""
         pass
 
     def send_joints_commands(self) -> None:
         command = "3" + "$".join(str(slider.get()) for slider in self.left_sliders)
-        self.ws.send(command)
+        self.websocket_client.send_message(command)
 
     def update_video_frame(self) -> None:
         ret, frame = self.cap.read()
@@ -118,22 +106,10 @@ class RobotGUI:
 
         self.root.after(10, self.update_video_frame)
 
-    def on_message(self, ws, message):
-        print(f"Received message: {message}")
-
-    def on_error(self, ws, error):
-        print(f"Error: {error}")
-
-    def on_close(self, ws):
-        print("WebSocket closed")
-
-    def on_open(self, ws):
-        print("WebSocket connection opened")
-
     def __del__(self):
         if self.cap.isOpened():
             self.cap.release()
-        self.ws.close()
+        self.websocket_client.close_connection()
 
 
 def main():
