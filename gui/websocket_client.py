@@ -15,7 +15,7 @@ class WsClient:
         self.ws_thread.daemon = True
         self.ws_thread.start()
 
-    def send_message(self, message: str):
+    def send_message(self, message: str) -> None:
         self.ws.send(message)
 
     def on_message(self, ws, message: str) -> None:
@@ -30,5 +30,5 @@ class WsClient:
     def on_open(self, ws) -> None:
         print("WebSocket connection opened")
 
-    def close_connection(self):
+    def close_connection(self) -> None:
         self.ws.close()

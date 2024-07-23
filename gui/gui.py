@@ -18,14 +18,14 @@ class RobotGUI:
 
         self.gripper_status = self.get_initial_gripper_status()
 
-        self.left_frame = ttk.Frame(root)
+        self.left_frame = ttk.Frame(self.root)
         self.left_frame.grid(row=0, column=0, padx=10, pady=10, sticky="n")
 
-        self.video_frame = ttk.Frame(root)
+        self.video_frame = ttk.Frame(self.root)
         self.video_frame.grid(row=0, column=1, padx=10, pady=10)
         self.create_left_panel()
 
-        self.right_frame = ttk.Frame(root)
+        self.right_frame = ttk.Frame(self.root)
         self.right_frame.grid(row=0, column=2, padx=10, pady=10, sticky="n")
         self.create_right_panel()
 
@@ -92,7 +92,7 @@ class RobotGUI:
         pass
 
     def send_joints_commands(self) -> None:
-        command = "3" + "$".join(str(slider.get()) for slider in self.left_sliders)
+        command = "3$" + "$".join(str(slider.get()) for slider in self.left_sliders)
         self.websocket_client.send_message(command)
 
     def update_video_frame(self) -> None:
@@ -114,7 +114,7 @@ class RobotGUI:
 
 def main():
     root = tk.Tk()
-    app = RobotGUI(root)
+    RobotGUI(root)
     root.mainloop()
 
 
