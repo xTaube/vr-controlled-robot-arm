@@ -49,15 +49,15 @@ RESULT_CODE set_new_arm_position(Arm *arm, JointsAngles *translations, JointsAng
     if (!arm->state.is_calibrated && arm->state.mode != ARM_CALIBRATION_MODE) return RESULT_ARM_NOT_CALIBRATED;
 
     long steps = (long)round(translations->x*X_AX_STEPS_PER_DEGREE);
-    fallback->x = steps*X_AX_DEG_PER_STEP - translations->x;
+    fallback->x = (float)steps*X_AX_DEG_PER_STEP - translations->x;
     arm->x_stepper->move(steps);
 
     steps = (long)round(translations->y*Y_AX_STEPS_PER_DEGREE);
-    fallback->y = steps*Y_AX_DEG_PER_STEP - translations->y;
+    fallback->y = (float)steps*Y_AX_DEG_PER_STEP - translations->y;
     arm->y_stepper->move(steps);
 
     steps = (long)round(translations->z*Z_AX_STEPS_PER_DEGREE);
-    fallback->z = steps*Z_AX_DEG_PER_STEP - translations->z;
+    fallback->z = (float)steps*Z_AX_DEG_PER_STEP - translations->z;
     arm->z_stepper->move(steps);
 
     fallback->v = round(translations->v) - translations->v;
@@ -82,7 +82,8 @@ RESULT_CODE set_arm_speed(Arm *arm, float speed) {
 
 RESULT_CODE set_arm_current_position_as_reference(Arm *arm) {
     if (arm->state.mode != ARM_CALIBRATION_MODE) return RESULT_ARM_NOT_IN_CALIBRATION_MODE;
-
+    if (is_arm_in_move(arm)) return RESULT_ARM_IN_MOVE;
+    
     arm->x_stepper->setCurrentPosition(0);
     arm->y_stepper->setCurrentPosition(0);
     arm->z_stepper->setCurrentPosition(0);
@@ -93,11 +94,11 @@ RESULT_CODE set_arm_current_position_as_reference(Arm *arm) {
 RESULT_CODE get_arm_current_position(Arm *arm, JointsAngles *position) {
     if (!arm->state.is_calibrated && arm->state.mode != ARM_CALIBRATION_MODE) return RESULT_ARM_NOT_CALIBRATED;
 
-    position->x = arm->x_stepper->currentPosition()*X_AX_DEG_PER_STEP;
-    position->y = arm->y_stepper->currentPosition()*Y_AX_DEG_PER_STEP;
-    position->z = arm->z_stepper->currentPosition()*Z_AX_DEG_PER_STEP;
-    position->v = arm->v_servo->read();
-    position->w = arm->v_servo->read();
+    position->x = (float)arm->x_stepper->currentPosition()*X_AX_DEG_PER_STEP;
+    position->y = (float)arm->y_stepper->currentPosition()*Y_AX_DEG_PER_STEP;
+    position->z = (float)arm->z_stepper->currentPosition()*Z_AX_DEG_PER_STEP;
+    position->v = (float)arm->v_servo->read();
+    position->w = (float)arm->v_servo->read();
 
     return RESULT_OK;
 }

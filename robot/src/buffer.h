@@ -9,7 +9,7 @@ void clear_buffer(uint8_t *buffer);
 
 RESULT_CODE load_joints_angles_from_buffer(uint8_t *buffer, size_t buffer_len, JointsAngles *joints_angles);
 
-float read_arm_new_speed_from_buffer(uint8_t *buffer);
+void read_arm_new_speed_from_buffer(uint8_t *buffer, float *speed);
 
 size_t load_result_with_joints_angles_to_buffer(uint8_t *buffer, RESULT_CODE code, JointsAngles *joints_angles);
 

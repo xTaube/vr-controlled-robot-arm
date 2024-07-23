@@ -40,11 +40,8 @@ RESULT_CODE load_joints_angles_from_buffer(uint8_t *buffer, size_t buffer_len, J
     return RESULT_OK;
 }
 
-float read_arm_new_speed_from_buffer(uint8_t *buffer) {
-    float speed;
-    memcpy(&speed, buffer+ARM_SPEED_OFFSET, ARM_SPEED_SIZE);
-    
-    return speed;
+void read_arm_new_speed_from_buffer(uint8_t *buffer, float *speed) {
+    memcpy(speed, buffer+ARM_SPEED_OFFSET, ARM_SPEED_SIZE);
 }
 
 size_t load_result_with_joints_angles_to_buffer(uint8_t *buffer, RESULT_CODE code, JointsAngles *joints_angles) {

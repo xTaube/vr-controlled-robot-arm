@@ -27,6 +27,8 @@ typedef enum {
     CHECK_ARM_CALIBRATION = 4,
     START_CALIBRATION = 5,
     FINISH_CALIBRATION = 6,
+    ABORT_CALIBRATION = 7,
+    CHECK_ARM_IDLE = 8
 } ACTION_TYPE;
 
 typedef enum {
@@ -75,6 +77,7 @@ RESULT_CODE set_arm_speed(Arm *arm, float speed);
 RESULT_CODE set_arm_current_position_as_reference(Arm *arm);
 RESULT_CODE get_arm_current_position(Arm *arm, JointsAngles *position);
 RESULT_CODE is_arm_calibrated(Arm *arm);
+bool is_arm_in_move(Arm *arm);
 void set_arm_mode(Arm *arm, ARM_MODE mode);
 void move_arm_steppers(Arm *arm);
 void set_arm_calibration(Arm *arm, bool is_calibrated);

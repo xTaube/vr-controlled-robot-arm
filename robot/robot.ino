@@ -35,10 +35,10 @@ void setup() {
 
 void loop() {
   if (Serial.available() > 0) {
-    loaded_bytes = Serial.readBytesUntil(END_OF_TRANSMISSION, buffer, UART_BUFFER_SIZE);
+    int loaded_bytes = Serial.readBytesUntil(END_OF_TRANSMISSION, buffer, UART_BUFFER_SIZE);
     switch (buffer[0])
     {
-      case SET_NEW_ARM_POSITION:
+      case SET_NEW_ARM_POSITION: {
         JointsAngles *translations = (JointsAngles*) malloc(sizeof(JointsAngles));
         result_code = load_joints_angles_from_buffer(buffer, loaded_bytes, translations);
         clear_buffer(buffer);
@@ -46,6 +46,7 @@ void loop() {
         if (result_code != RESULT_OK) {
           loaded_bytes = load_result_code_to_buffer(buffer, result_code);
           send_result(loaded_bytes);
+          clear_buffer(buffer);
           free(translations);
           break;
         }
@@ -53,9 +54,11 @@ void loop() {
         JointsAngles *fallback = (JointsAngles*) malloc(sizeof(JointsAngles));
         result_code = set_new_arm_position(&arm, translations, fallback);
 
-        if (result_code == RESULT_OK) {
+        if (result_code != RESULT_OK) {
           loaded_bytes = load_result_code_to_buffer(buffer, result_code);
           send_result(loaded_bytes);
+          clear_buffer(buffer);
+
           free(translations);
           free(fallback);
           break;
@@ -63,28 +66,32 @@ void loop() {
 
         loaded_bytes = load_result_with_joints_angles_to_buffer(buffer, result_code, fallback);
         send_result(loaded_bytes);
+        clear_buffer(buffer);
 
         free(translations);
         free(fallback);
         break;
-
-      case SET_ARM_SPEED:
-        float new_speed = read_arm_new_speed_from_buffer(buffer);
+      }
+      case SET_ARM_SPEED: {
+        float *new_speed = (float *) malloc(sizeof(float));
+        read_arm_new_speed_from_buffer(buffer, new_speed);
         clear_buffer(buffer);
         
-        result_code = set_arm_speed(&arm, new_speed);
+        result_code = set_arm_speed(&arm, *new_speed);
         loaded_bytes = load_result_code_to_buffer(buffer, result_code);
         send_result(loaded_bytes);
+        free(new_speed);
         break;
-      
-      case GET_ARM_CURRENT_POSITION:
+      }
+      case GET_ARM_CURRENT_POSITION: {
         clear_buffer(buffer);
-        JointsAngles *current_position = (JointsAngles *) malloc(sizeof(JointsAngles));
+        JointsAngles *current_position = (JointsAngles*) malloc(sizeof(JointsAngles));
         result_code = get_arm_current_position(&arm, current_position);
 
         if (result_code != RESULT_OK) {
           loaded_bytes = load_result_code_to_buffer(buffer, result_code);
           send_result(loaded_bytes);
+          clear_buffer(buffer);
           free(current_position);
           break;
         }
@@ -93,24 +100,30 @@ void loop() {
         send_result(loaded_bytes);
         free(current_position);
         break;
-
-      case CHECK_ARM_CALIBRATION:
+      }
+      case CHECK_ARM_CALIBRATION: { 
         clear_buffer(buffer);
         result_code = is_arm_calibrated(&arm);
-        loaded_bytes = (buffer, result_code);
+        loaded_bytes = load_result_code_to_buffer(buffer, result_code);
         send_result(loaded_bytes);
         break;
-
-      case START_CALIBRATION:
+      }
+      case START_CALIBRATION: {
         clear_buffer(buffer);
+        if (is_arm_in_move(&arm)) {
+          loaded_bytes = load_result_code_to_buffer(buffer, RESULT_ARM_IN_MOVE);
+          send_result(loaded_bytes);
+          break;
+        } 
+
         set_arm_mode(&arm, ARM_CALIBRATION_MODE);
         set_arm_calibration(&arm, false);
 
-        loaded_bytes = (buffer, RESULT_OK);
+        loaded_bytes = load_result_code_to_buffer(buffer, RESULT_OK);
         send_result(loaded_bytes);
         break;
-
-      case FINISH_CALIBRATION:
+      }
+      case FINISH_CALIBRATION: {
         clear_buffer(buffer);
         result_code = set_arm_current_position_as_reference(&arm);
         
@@ -125,12 +138,34 @@ void loop() {
         loaded_bytes = load_result_code_to_buffer(buffer, result_code);
         send_result(loaded_bytes);
         break;
-
-      default:
+      }
+      case ABORT_CALIBRATION: {
+        clear_buffer(buffer);
+        if (arm.state.mode != ARM_CALIBRATION_MODE) {
+          loaded_bytes = load_result_code_to_buffer(buffer, RESULT_ARM_NOT_IN_CALIBRATION_MODE);
+          send_result(loaded_bytes);
+          break;
+        }
+        set_arm_mode(&arm, ARM_NORMAL_MODE);
+        loaded_bytes = load_result_code_to_buffer(buffer, RESULT_OK);
+        send_result(loaded_bytes);
+        break;
+      }
+      case CHECK_ARM_IDLE: {
+        clear_buffer(buffer);
+        if (is_arm_in_move(&arm)) result_code = RESULT_ARM_IN_MOVE;
+        else result_code = RESULT_OK;
+        
+        loaded_bytes = load_result_code_to_buffer(buffer, result_code);
+        send_result(loaded_bytes);
+        break;
+      }
+      default: {
         loaded_bytes = load_result_code_to_buffer(buffer, RESULT_UNKNOWN_ACTION);
         send_result(loaded_bytes);
+        break;
+      }
     }
-
     clear_buffer(buffer);
   }
   move_arm_steppers(&arm);
