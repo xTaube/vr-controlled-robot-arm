@@ -69,19 +69,9 @@ func WebTransportControlRequestHandler(server *webtransport.Server) func(http.Re
 		}
 		defer robot.ShutDown()
 		log.Println("Robot arm initialized.")
+		
+		// PLACE TO WRITE COMMAND HANDLER
 
-		commandHandler := InitCommandHandler(videoStream, robot)
-		for {
-			buf := make([]byte, BUFF_SIZE)
-			log.Println("Waiting for message...")
-			n, err := stream.Read(buf)
-			if err != nil {
-				break
-			}
-			command_id, args := ParseRequestArguments(string(buf[:n]))
-			response := commandHandler.Handle(command_id, args)
-			stream.Write(response.Parse())
-		}
 		log.Println("Session finished")
 	}
 }
@@ -124,7 +114,9 @@ func WebSocketControlRequestHandler(w http.ResponseWriter, r *http.Request) {
 	defer robot.ShutDown()
 	log.Println("Robot arm initialized.")
 
-	commandHandler := InitCommandHandler(videoStream, robot)
+	robotCalibrationWorkflow := InitRobotCalibrationWorkflow(connection, robot)
+
+	commandHandler := InitCommandHandler(videoStream, robot, robotCalibrationWorkflow)
 	for {
 		_, request, err := connection.ReadMessage()
 		if err != nil {
