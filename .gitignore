@@ -28,3 +28,4 @@ stream-logs/
 .DS_Store
 
 .idea
+*.pyc
