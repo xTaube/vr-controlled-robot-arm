@@ -58,7 +58,7 @@ class RobotGUI:
     def create_left_panel(self) -> None:
         self.left_sliders = []
         slider_ranges = [
-            (0, 360, "z"),  # Range for Joint z
+            (-360, 360, "z"),  # Range for Joint z
             (-65, 95, "y"),  # Range for Joint y
             (-90, 95, "x"),  # Range for Joint x
             (0, 180, "v"),  # Range for Joint v
@@ -98,6 +98,17 @@ class RobotGUI:
             style="TButton",
         )
         self.toggle_calibration_button.grid(row=7, column=0, padx=5, pady=5)
+
+        self.toggle_calibration_button = ttk.Button(
+            self.left_frame,
+            text="Set all joints to 0",
+            command=self.set_all_to_0
+        )
+        self.toggle_calibration_button.grid(row=7, column=0, padx=5, pady=5)
+
+    def set_all_to_0(self) -> None:
+        for slider in self.left_sliders:
+            slider.set(0)
 
     def create_right_panel(self) -> None:
         self.right_sliders = []
@@ -153,8 +164,7 @@ class RobotGUI:
             self.toggle_calibration_button.configure(
                 text="Start Calibrating", style="Green.TButton"
             )
-            for slider in self.left_sliders:
-                slider.set(0)
+            self.set_all_to_0()
 
     def get_gripper_text(self) -> str:
         return "Open Gripper" if not self.gripper_status else "Close Gripper"
