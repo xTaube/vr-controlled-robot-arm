@@ -1,10 +1,10 @@
 #include "arm.h"
 
 
-const float STEPS_PER_DEGREE = 1/DEG_PER_STEP;
-const float X_AX_GEAR_RATIO = 4.89;
-const float Y_AX_GEAR_RATIO = 6;
-const float Z_AX_GEAR_RATIO = 4.2;
+const float STEPS_PER_DEGREE = 1.0F/DEG_PER_STEP;
+const float X_AX_GEAR_RATIO = 4.89F;
+const float Y_AX_GEAR_RATIO = 6.0F;
+const float Z_AX_GEAR_RATIO = 4.2F;
 
 const float X_AX_STEPS_PER_DEGREE = STEPS_PER_DEGREE * X_AX_GEAR_RATIO;
 const float Y_AX_STEPS_PER_DEGREE = STEPS_PER_DEGREE * Y_AX_GEAR_RATIO;
@@ -45,26 +45,26 @@ void initialize_arm_motors(Arm *arm) {
 }
 
 
-RESULT_CODE set_new_arm_position(Arm *arm, JointsAngles *translations, JointsAngles *fallback) {
+RESULT_CODE set_new_arm_position(Arm *arm, JointsAngles *joints, JointsAngles *fallback) {
     if (!arm->state.is_calibrated && arm->state.mode != ARM_CALIBRATION_MODE) return RESULT_ARM_NOT_CALIBRATED;
 
-    long steps = (long)round(translations->x*X_AX_STEPS_PER_DEGREE);
-    fallback->x = (float)steps*X_AX_DEG_PER_STEP - translations->x;
-    arm->x_stepper->move(steps);
+    long steps = (long)round(joints->x*X_AX_STEPS_PER_DEGREE);
+    fallback->x = (float)steps*X_AX_DEG_PER_STEP;
+    arm->x_stepper->moveTo(steps);
 
-    steps = (long)round(translations->y*Y_AX_STEPS_PER_DEGREE);
-    fallback->y = (float)steps*Y_AX_DEG_PER_STEP - translations->y;
-    arm->y_stepper->move(steps);
+    steps = (long)round(joints->y*Y_AX_STEPS_PER_DEGREE);
+    fallback->y = (float)steps*Y_AX_DEG_PER_STEP;
+    arm->y_stepper->moveTo(steps);
 
-    steps = (long)round(translations->z*Z_AX_STEPS_PER_DEGREE);
-    fallback->z = (float)steps*Z_AX_DEG_PER_STEP - translations->z;
-    arm->z_stepper->move(steps);
+    steps = (long)round(joints->z*Z_AX_STEPS_PER_DEGREE);
+    fallback->z = (float)steps*Z_AX_DEG_PER_STEP;
+    arm->z_stepper->moveTo(steps);
 
-    fallback->v = round(translations->v) - translations->v;
-    arm->v_servo->write(arm->v_servo->read() + (int)round(translations->v));
+    fallback->v = round(joints->v);
+    arm->v_servo->write((int)fallback->v);
 
-    fallback->w = round(translations->w) - translations->w;
-    arm->w_servo->write(arm->w_servo->read() + (int)round(translations->w));
+    fallback->w = round(joints->w);
+    arm->w_servo->write((int)fallback->w);
 
     return RESULT_OK;
 }
