@@ -1,8 +1,13 @@
+import os
 import tkinter as tk
 import cv2
 from PIL import Image, ImageTk
 from tkinter import ttk
 from websocket_client import WsClient
+from dotenv import load_dotenv
+
+load_dotenv()
+WEBSOCKET_URL = os.getenv("WEBSOCKET_URL")
 
 
 class RobotGUI:
@@ -45,7 +50,7 @@ class RobotGUI:
         self.cap = cv2.VideoCapture(0)  # można tu dać stream RTSP
         self.update_video_frame()
 
-        self.websocket_client = WsClient("ws://localhost:8765")
+        self.websocket_client = WsClient(WEBSOCKET_URL)
 
     def get_initial_gripper_status(self) -> bool:
         return True
