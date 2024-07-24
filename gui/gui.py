@@ -58,27 +58,33 @@ class RobotGUI:
     def create_left_panel(self) -> None:
         self.left_sliders = []
         slider_ranges = [
-            (0, 360),  # Range for Joint 0
-            (-65, 95),  # Range for Joint 1
-            (-90, 95),  # Range for Joint 2
-            (0, 180),  # Range for Joint 3
-            (5, 180),  # Range for Joint 4
+            (0, 360, "z"),  # Range for Joint z
+            (-65, 95, "y"),  # Range for Joint y
+            (-90, 95, "x"),  # Range for Joint x
+            (0, 180, "v"),  # Range for Joint v
+            (5, 180, "w"),  # Range for Joint w
         ]
 
-        for i, (min_val, max_val) in enumerate(slider_ranges):
+        for i, (min_val, max_val, axis_name) in enumerate(slider_ranges):
             frame = ttk.Frame(self.left_frame)
             frame.grid(row=i, column=0, padx=5, pady=5)
+
+            min_label = ttk.Label(frame, text=f"{min_val}")
+            min_label.grid(row=0, column=0, padx=5, pady=5)
 
             slider = tk.Scale(
                 frame,
                 from_=min_val,
                 to=max_val,
                 orient="horizontal",
-                length=360,
-                label=f"Joint {i}",
+                length=300,
+                label=f"Joint {axis_name}",
             )
-            slider.grid(row=0, column=0, padx=5, pady=5)
+            slider.grid(row=0, column=1, padx=5, pady=5)
             self.left_sliders.append(slider)
+
+            max_label = ttk.Label(frame, text=f"{max_val}")
+            max_label.grid(row=0, column=2, padx=5, pady=5)
 
         self.send_joints_button = ttk.Button(
             self.left_frame, text="Send commands", command=self.send_joints_commands
@@ -105,16 +111,22 @@ class RobotGUI:
             frame = ttk.Frame(self.right_frame)
             frame.grid(row=i, column=0, padx=5, pady=5)
 
+            min_label = ttk.Label(frame, text=f"{min_val}")
+            min_label.grid(row=0, column=0, padx=5, pady=5)
+
             slider = tk.Scale(
                 frame,
                 from_=min_val,
                 to=max_val,
                 orient="horizontal",
-                length=360,
+                length=300,
                 label=f"Slider {i + 1}",
             )
-            slider.grid(row=0, column=0, padx=5, pady=5)
+            slider.grid(row=0, column=1, padx=5, pady=5)
             self.right_sliders.append(slider)
+
+            max_label = ttk.Label(frame, text=f"{max_val}")
+            max_label.grid(row=0, column=2, padx=5, pady=5)
 
         self.gripper_button = ttk.Button(
             self.right_frame, text=self.get_gripper_text(), command=self.toggle_gripper
