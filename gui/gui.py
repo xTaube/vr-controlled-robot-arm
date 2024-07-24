@@ -98,6 +98,16 @@ class RobotGUI:
     def update_video_frame(self) -> None:
         ret, frame = self.cap.read()
         if ret:
+            # scale_percent = 50
+            # width = int(frame.shape[1] * scale_percent / 100)
+            # height = int(frame.shape[0] * scale_percent / 100)
+            width = 600
+            height = 400
+            dim = (width, height)
+
+            resized_frame = cv2.resize(frame, dim, interpolation=cv2.INTER_AREA)
+
+            frame = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2RGB)
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             img = Image.fromarray(frame)
             imgtk = ImageTk.PhotoImage(image=img)
