@@ -75,7 +75,7 @@ type XYZAxisCalibrationStep struct {
 func (s *XYZAxisCalibrationStep) Execute() error {
 	response := ResponseWithStringArguments{
 		Code: RESPONSE_OK,
-		Args: []string{"You're calibrating XYZ axis. Send '0${X-deg}${Y-deg}${Z-deg}' to move, send '1' to confirm, send '2' to abort."}}
+		Args: []string{"You're calibrating XYZ axis. Send '1' to confirm, send '2' to abort, send '3${X-deg}${Y-deg}${Z-deg}${V-deg}${W-deg}' to move."}}
 	s.connection.WriteMessage(websocket.TextMessage, response.Parse())
 
 	for {
@@ -87,17 +87,6 @@ func (s *XYZAxisCalibrationStep) Execute() error {
 		command, args := ParseRequestArguments(string(request))
 
 		switch command {
-		case 0:
-			fallback, err := s.robot.Move(
-				robot.JointsAngles{X: readFloat32(args[0]), Y: readFloat32(args[1]), Z: readFloat32(args[2]), V: 0, W: 0},
-			)
-			if err != nil {
-				response := ErrorResponse{Code: RESPONSE_ROBOT_CANNOT_EXECUTE_COMMAND_ERROR, Err: err}
-				s.connection.WriteMessage(websocket.TextMessage, response.Parse())
-				continue
-			}
-			response := ResponseWithFloat32Arguments{Code: RESPONSE_OK, Args: []float32{fallback.X, fallback.Y, fallback.Z}}
-			s.connection.WriteMessage(websocket.TextMessage, response.Parse())
 		case 1:
 			if !s.robot.IsIdle() {
 				response := ErrorResponse{
@@ -108,8 +97,22 @@ func (s *XYZAxisCalibrationStep) Execute() error {
 				continue
 			}
 			return nil
+
 		case 2:
 			return &WorkflowAbortedError{s.workflow_id, "user input"}
+
+		case 3:
+			fallback, err := s.robot.Move(
+				robot.JointsAngles{X: readFloat32(args[0]), Y: readFloat32(args[1]), Z: readFloat32(args[2]), V: readFloat32(args[3]), W: readFloat32(args[4])},
+			)
+			if err != nil {
+				response := ErrorResponse{Code: RESPONSE_ROBOT_CANNOT_EXECUTE_COMMAND_ERROR, Err: err}
+				s.connection.WriteMessage(websocket.TextMessage, response.Parse())
+				continue
+			}
+			response := ResponseWithFloat32Arguments{Code: RESPONSE_OK, Args: []float32{fallback.X, fallback.Y, fallback.Z}}
+			s.connection.WriteMessage(websocket.TextMessage, response.Parse())
+
 		default:
 			response := ErrorResponse {
 				Code: RESPONSE_UNKNOWN_COMMAND_ERROR,
