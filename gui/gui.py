@@ -12,6 +12,7 @@ WEBSOCKET_URL = os.getenv("WEBSOCKET_URL")
 
 class RobotGUI:
     def __init__(self, root: tk.Tk):
+        self.set_all_to_0_button = None
         self.gripper_button = None
         self.send_xyz_button = None
         self.send_joints_button = None
@@ -99,12 +100,12 @@ class RobotGUI:
         )
         self.toggle_calibration_button.grid(row=7, column=0, padx=5, pady=5)
 
-        self.toggle_calibration_button = ttk.Button(
+        self.set_all_to_0_button = ttk.Button(
             self.left_frame,
             text="Set all joints to 0",
             command=self.set_all_to_0
         )
-        self.toggle_calibration_button.grid(row=7, column=0, padx=5, pady=5)
+        self.set_all_to_0_button.grid(row=8, column=0, padx=5, pady=5)
 
     def set_all_to_0(self) -> None:
         for slider in self.left_sliders:
