@@ -59,10 +59,10 @@ class RobotGUI:
         self.left_sliders = []
         slider_ranges = [
             (0, 360),  # Range for Joint 0
-            (-95, 110),  # Range for Joint 1
-            (-90, 130),  # Range for Joint 2
-            (0, 360),  # Range for Joint 3
-            (-100, 100),  # Range for Joint 4
+            (-65, 95),  # Range for Joint 1
+            (-90, 95),  # Range for Joint 2
+            (0, 180),  # Range for Joint 3
+            (5, 180),  # Range for Joint 4
         ]
 
         for i, (min_val, max_val) in enumerate(slider_ranges):
