@@ -11,9 +11,9 @@ class RobotGUI:
         self.send_xyz_button = None
         self.send_joints_button = None
         self.right_sliders = None
-        self.right_entries = None
         self.left_sliders = None
-        self.left_entries = None
+        self.calibration_sliders = None
+        self.calibration_button = None
 
         self.root = root
         self.root.title("Wariat Robot - GUI")
@@ -31,6 +31,10 @@ class RobotGUI:
         self.right_frame.grid(row=0, column=2, padx=10, pady=10, sticky="n")
         self.create_right_panel()
 
+        self.calibration_frame = ttk.Frame(self.root)
+        self.calibration_frame.grid(row=1, column=1, padx=10, pady=10)
+        self.create_calibration_panel()
+
         self.video_label = ttk.Label(self.video_frame)
         self.video_label.grid(row=0, column=0)
         self.cap = cv2.VideoCapture(0)  # można tu dać stream RTSP
@@ -43,12 +47,11 @@ class RobotGUI:
 
     def create_left_panel(self) -> None:
         self.left_sliders = []
-        self.left_entries = []
         slider_ranges = [
-            (0, 360),  # Range for Joint 0
+            (0, 360),   # Range for Joint 0
             (-95, 110),  # Range for Joint 1
             (-90, 130),  # Range for Joint 2
-            (0, 360),  # Range for Joint 3
+            (0, 360),   # Range for Joint 3
             (-100, 100)  # Range for Joint 4
         ]
 
@@ -62,16 +65,10 @@ class RobotGUI:
                 to=max_val,
                 orient="horizontal",
                 length=300,
-                label=f"Joint {i}",
-                command=lambda value, i=i: self.update_entry_from_slider(value, i, 'left')
+                label=f"Joint {i}"
             )
             slider.grid(row=0, column=0, padx=5, pady=5)
             self.left_sliders.append(slider)
-
-            entry = ttk.Entry(frame)
-            entry.grid(row=0, column=1, padx=5, pady=5)
-            entry.bind('<Return>', lambda event, i=i: self.update_slider_from_entry(event, i, 'left'))
-            self.left_entries.append(entry)
 
         self.send_joints_button = ttk.Button(
             self.left_frame, text="Send commands", command=self.send_joints_commands
@@ -80,11 +77,10 @@ class RobotGUI:
 
     def create_right_panel(self) -> None:
         self.right_sliders = []
-        self.right_entries = []
         slider_ranges = [
             (0, 100),  # Range for Slider 1
             (0, 100),  # Range for Slider 2
-            (0, 100)  # Range for Slider 3
+            (0, 100)   # Range for Slider 3
         ]
 
         for i, (min_val, max_val) in enumerate(slider_ranges):
@@ -97,16 +93,10 @@ class RobotGUI:
                 to=max_val,
                 orient="horizontal",
                 length=300,
-                label=f"Slider {i + 1}",
-                command=lambda value, i=i: self.update_entry_from_slider(value, i, 'right')
+                label=f"Slider {i + 1}"
             )
             slider.grid(row=0, column=0, padx=5, pady=5)
             self.right_sliders.append(slider)
-
-            entry = ttk.Entry(frame)
-            entry.grid(row=0, column=1, padx=5, pady=5)
-            entry.bind('<Return>', lambda event, i=i: self.update_slider_from_entry(event, i, 'right'))
-            self.right_entries.append(entry)
 
         self.gripper_button = ttk.Button(
             self.right_frame, text=self.get_gripper_text(), command=self.toggle_gripper
@@ -118,21 +108,34 @@ class RobotGUI:
         )
         self.send_xyz_button.grid(row=4, column=0, padx=5, pady=5)
 
-    def update_entry_from_slider(self, value, index, side):
-        if side == 'left':
-            self.left_entries[index].delete(0, tk.END)
-            self.left_entries[index].insert(0, str(value))
-        else:
-            self.right_entries[index].delete(0, tk.END)
-            self.right_entries[index].insert(0, str(value))
+    def create_calibration_panel(self) -> None:
+        self.calibration_sliders = []
+        slider_ranges = [
+            (0, 180),  # Range for Calibration Slider 1
+            (0, 150),  # Range for Calibration Slider 2
+            (0, 120)   # Range for Calibration Slider 3
+        ]
 
-    def update_slider_from_entry(self, event, index, side):
-        if side == 'left':
-            value = self.left_entries[index].get()
-            self.left_sliders[index].set(value)
-        else:
-            value = self.right_entries[index].get()
-            self.right_sliders[index].set(value)
+        for i, (min_val, max_val) in enumerate(slider_ranges):
+            slider = tk.Scale(
+                self.calibration_frame,
+                from_=min_val,
+                to=max_val,
+                orient="horizontal",
+                length=300,
+                label=f"Calibration Slider {i + 1}"
+            )
+            slider.grid(row=i, column=0, padx=5, pady=5)
+            self.calibration_sliders.append(slider)
+
+        self.calibration_button = ttk.Button(
+            self.calibration_frame, text="Calibrate", command=self.send_calibration_commands
+        )
+        self.calibration_button.grid(row=3, column=0, padx=5, pady=5)
+
+    def send_calibration_commands(self) -> None:
+        command = "calibrate$" + "$".join(str(slider.get()) for slider in self.calibration_sliders)
+        self.websocket_client.send_message(command)
 
     def get_gripper_text(self) -> str:
         return "Open Gripper" if not self.gripper_status else "Close Gripper"
