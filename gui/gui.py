@@ -12,6 +12,8 @@ WEBSOCKET_URL = os.getenv("WEBSOCKET_URL")
 
 class RobotGUI:
     def __init__(self, root: tk.Tk):
+        self.speed_send_button = None
+        self.speed_slider = None
         self.set_all_to_0_button = None
         self.gripper_button = None
         self.send_xyz_button = None
@@ -140,15 +142,33 @@ class RobotGUI:
             max_label = ttk.Label(frame, text=f"{max_val}")
             max_label.grid(row=0, column=2, padx=5, pady=5)
 
+        self.speed_slider = tk.Scale(
+            self.right_frame,
+            from_=50,
+            to=1000,
+            orient="horizontal",
+            length=360,
+            label=f"Speed slider",
+        )
+        self.speed_slider.grid(row=4, column=0, padx=5, pady=5)
+        self.speed_send_button = ttk.Button(
+            self.right_frame, text="Send speeeeeeeed", command=self.send_speed_command
+        )
+        self.speed_send_button.grid(row=5, column=0, padx=5, pady=5)
+
         self.gripper_button = ttk.Button(
             self.right_frame, text=self.get_gripper_text(), command=self.toggle_gripper
         )
-        self.gripper_button.grid(row=3, column=0, padx=5, pady=5)
+        self.gripper_button.grid(row=6, column=0, padx=5, pady=5)
 
         self.send_xyz_button = ttk.Button(
             self.right_frame, text="Send commands", command=self.send_xyz_commands
         )
-        self.send_xyz_button.grid(row=4, column=0, padx=5, pady=5)
+        self.send_xyz_button.grid(row=7, column=0, padx=5, pady=5)
+
+    def send_speed_command(self) -> None:
+        speed = str(self.speed_slider.get())
+        self.websocket_client.send_message(f"4${speed}")
 
     def toggle_calibration(self) -> None:
         self.is_calibrating = not self.is_calibrating
