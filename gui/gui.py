@@ -14,9 +14,15 @@ class RobotGUI:
         self.left_sliders = None
         self.calibration_sliders = None
         self.calibration_button = None
+        self.toggle_calibration_button = None
+        self.is_calibrating = False
 
         self.root = root
         self.root.title("Wariat Robot - GUI")
+
+        style = ttk.Style()
+        style.configure("Green.TButton", background="green")
+        style.configure("Red.TButton", background="red")
 
         self.gripper_status = self.get_initial_gripper_status()
 
@@ -33,7 +39,6 @@ class RobotGUI:
 
         self.calibration_frame = ttk.Frame(self.root)
         self.calibration_frame.grid(row=1, column=1, padx=10, pady=10)
-        self.create_calibration_panel()
 
         self.video_label = ttk.Label(self.video_frame)
         self.video_label.grid(row=0, column=0)
@@ -48,11 +53,11 @@ class RobotGUI:
     def create_left_panel(self) -> None:
         self.left_sliders = []
         slider_ranges = [
-            (0, 360),   # Range for Joint 0
+            (0, 360),  # Range for Joint 0
             (-95, 110),  # Range for Joint 1
             (-90, 130),  # Range for Joint 2
-            (0, 360),   # Range for Joint 3
-            (-100, 100)  # Range for Joint 4
+            (0, 360),  # Range for Joint 3
+            (-100, 100),  # Range for Joint 4
         ]
 
         for i, (min_val, max_val) in enumerate(slider_ranges):
@@ -64,8 +69,8 @@ class RobotGUI:
                 from_=min_val,
                 to=max_val,
                 orient="horizontal",
-                length=300,
-                label=f"Joint {i}"
+                length=360,
+                label=f"Joint {i}",
             )
             slider.grid(row=0, column=0, padx=5, pady=5)
             self.left_sliders.append(slider)
@@ -75,12 +80,20 @@ class RobotGUI:
         )
         self.send_joints_button.grid(row=6, column=0, padx=5, pady=5)
 
+        self.toggle_calibration_button = ttk.Button(
+            self.left_frame,
+            text="Start Calibrating",
+            command=self.toggle_calibration,
+            style="TButton",
+        )
+        self.toggle_calibration_button.grid(row=7, column=0, padx=5, pady=5)
+
     def create_right_panel(self) -> None:
         self.right_sliders = []
         slider_ranges = [
             (0, 100),  # Range for Slider 1
             (0, 100),  # Range for Slider 2
-            (0, 100)   # Range for Slider 3
+            (0, 100),  # Range for Slider 3
         ]
 
         for i, (min_val, max_val) in enumerate(slider_ranges):
@@ -92,8 +105,8 @@ class RobotGUI:
                 from_=min_val,
                 to=max_val,
                 orient="horizontal",
-                length=300,
-                label=f"Slider {i + 1}"
+                length=360,
+                label=f"Slider {i + 1}",
             )
             slider.grid(row=0, column=0, padx=5, pady=5)
             self.right_sliders.append(slider)
@@ -108,34 +121,23 @@ class RobotGUI:
         )
         self.send_xyz_button.grid(row=4, column=0, padx=5, pady=5)
 
-    def create_calibration_panel(self) -> None:
-        self.calibration_sliders = []
-        slider_ranges = [
-            (0, 180),  # Range for Calibration Slider 1
-            (0, 150),  # Range for Calibration Slider 2
-            (0, 120)   # Range for Calibration Slider 3
-        ]
+    def toggle_calibration(self) -> None:
+        self.is_calibrating = not self.is_calibrating
 
-        for i, (min_val, max_val) in enumerate(slider_ranges):
-            slider = tk.Scale(
-                self.calibration_frame,
-                from_=min_val,
-                to=max_val,
-                orient="horizontal",
-                length=300,
-                label=f"Calibration Slider {i + 1}"
+        if self.is_calibrating:
+            self.websocket_client.send_message("6")
+            self.send_joints_button.configure(text="Send calibration")
+            self.toggle_calibration_button.configure(
+                text="Stop Calibrating", style="Red.TButton"
             )
-            slider.grid(row=i, column=0, padx=5, pady=5)
-            self.calibration_sliders.append(slider)
-
-        self.calibration_button = ttk.Button(
-            self.calibration_frame, text="Calibrate", command=self.send_calibration_commands
-        )
-        self.calibration_button.grid(row=3, column=0, padx=5, pady=5)
-
-    def send_calibration_commands(self) -> None:
-        command = "calibrate$" + "$".join(str(slider.get()) for slider in self.calibration_sliders)
-        self.websocket_client.send_message(command)
+        else:
+            self.websocket_client.send_message("1")
+            self.send_joints_button.configure(text="Send commands")
+            self.toggle_calibration_button.configure(
+                text="Start Calibrating", style="Green.TButton"
+            )
+            for slider in self.left_sliders:
+                slider.set(0)
 
     def get_gripper_text(self) -> str:
         return "Open Gripper" if not self.gripper_status else "Close Gripper"
