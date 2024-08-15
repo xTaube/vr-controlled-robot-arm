@@ -103,7 +103,7 @@ func (s *XYZAxisCalibrationStep) Execute() error {
 
 		case 3:
 			fallback, err := s.robot.Move(
-				robot.JointsAngles{X: readFloat32(args[0]), Y: readFloat32(args[1]), Z: readFloat32(args[2]), V: readFloat32(args[3]), W: readFloat32(args[4])},
+				robot.JointsAngles{Z: readFloat32(args[0]), Y: readFloat32(args[1]), X: readFloat32(args[2]), V: readFloat32(args[3]), W: readFloat32(args[4])},
 			)
 			if err != nil {
 				response := ErrorResponse{Code: RESPONSE_ROBOT_CANNOT_EXECUTE_COMMAND_ERROR, Err: err}

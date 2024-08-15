@@ -85,7 +85,7 @@ RESULT_CODE set_arm_current_position_as_reference(Arm *arm) {
     if (is_arm_in_move(arm)) return RESULT_ARM_IN_MOVE;
     
     arm->x_stepper->setCurrentPosition(0);
-    arm->y_stepper->setCurrentPosition(0);
+    arm->y_stepper->setCurrentPosition(-90*Y_AX_STEPS_PER_DEGREE);
     arm->z_stepper->setCurrentPosition(0);
 
     return RESULT_OK;

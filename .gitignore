@@ -29,3 +29,7 @@ stream-logs/
 
 .idea
 *.pyc
+
+#python
+venv
+__pycache__
