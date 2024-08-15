@@ -62,7 +62,7 @@ class RobotGUI:
         self.left_sliders = []
         slider_ranges = [
             (-360, 360, "z"),  # Range for Joint z
-            (-90, 95, "y"),  # Range for Joint y
+            (-180, 5, "y"),  # Range for Joint y
             (-65, 95, "x"),  # Range for Joint x
             (0, 180, "v"),  # Range for Joint v
             (5, 180, "w"),  # Range for Joint w
