@@ -67,9 +67,9 @@ func (ch *CommandHandler) moveArmCommandHandler(command_args []string) Response 
 	log.Printf("Attempt to move robot by translation: [%s].\n", strings.Join(command_args, ", "))
 	result, err := ch.robot.Move(
 		robot.JointsAngles{
-			X: readFloat32(command_args[0]),
+			Z: readFloat32(command_args[0]),
 			Y: readFloat32(command_args[1]),
-			Z: readFloat32(command_args[2]),
+			X: readFloat32(command_args[2]),
 			V: readFloat32(command_args[3]),
 			W: readFloat32(command_args[4]),
 		},

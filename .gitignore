@@ -26,3 +26,10 @@ stream-logs/
 #vscode
 .vscode
 .DS_Store
+
+.idea
+*.pyc
+
+#python
+venv
+__pycache__
