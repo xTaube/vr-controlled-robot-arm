@@ -109,12 +109,14 @@ class RobotGUI:
         )
         self.set_all_to_0_button.grid(row=8, column=0, padx=5, pady=5)
 
+        self.set_all_to_0()
+
     def set_all_to_0(self) -> None:
         self.left_sliders[0].set(0)
-        self.left_sliders[1].set(90)
+        self.left_sliders[1].set(-90)
         self.left_sliders[2].set(0)
-        self.left_sliders[3].set(0)
-        self.left_sliders[4].set(0)
+        self.left_sliders[3].set(90)
+        self.left_sliders[4].set(90)
 
     def create_right_panel(self) -> None:
         self.right_sliders = []
