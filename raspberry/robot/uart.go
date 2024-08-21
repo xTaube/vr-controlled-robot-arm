@@ -2,6 +2,7 @@ package robot
 
 import (
 	"log"
+	"slices"
 
 	"go.bug.st/serial"
 )
@@ -18,15 +19,13 @@ type UartConfig struct {
 
 type UartBuffer struct {
 	buff            []byte
-	bytes_read      int
-	terminationByte byte
+	bytesRead      int
 }
 
 func initUartBuffer() *UartBuffer {
 	buffer := UartBuffer{
 		buff:            make([]byte, UART_BUFFER_LEN),
-		bytes_read:      0,
-		terminationByte: byte(0x04),
+		bytesRead:      0,
 	}
 
 	return &buffer
@@ -34,28 +33,27 @@ func initUartBuffer() *UartBuffer {
 
 func (ub *UartBuffer) load(port serial.Port) error {
 	log.Println("UART: Trying to read...")
+	bytesToRead := make([]byte, 1)
+	_, err := port.Read(bytesToRead[:])
+	if err != nil {
+		return err
+	}
+
 	totalBytes := 0
-	for {
-		tempBuff := make([]byte, 1)
-		_, err := port.Read(tempBuff[:])
+	for ;totalBytes < int(bytesToRead[0]); {
+		n, err := port.Read(ub.buff[totalBytes:])
 		if err != nil {
 			return err
 		}
-
-		if tempBuff[0] == ub.terminationByte {
-			break
-		}
-
-		ub.buff[totalBytes] = tempBuff[0]
-		totalBytes++
+		totalBytes += n
 	}
 	log.Printf("UART: Read %d bytes.\n", totalBytes)
-	ub.bytes_read = totalBytes
+	ub.bytesRead = totalBytes
 	return nil
 }
 
 func (ub *UartBuffer) Read() []byte {
-	return ub.buff[:ub.bytes_read]
+	return ub.buff[:ub.bytesRead]
 }
 
 type Uart struct {
@@ -93,13 +91,16 @@ func (u *Uart) Close() error {
 
 func (u *Uart) Send(data []byte) error {
 	log.Println("UART: Trying to send bytes...")
-	data = append(data, u.buffer.terminationByte) // Add EOT byte
-	if _, err := u.port.Write(data); err != nil {
+	data = slices.Insert(data, 0, byte(len(data))) // Add number of bytes to read at the beginning
+
+	n, err := u.port.Write(data)
+	if err != nil {
 		log.Printf("UART: writing data resulted in error: %s\n", err)
 		return err
 	}
+	
 	u.port.Drain()
-	log.Printf("UART: Bytes sent %d\n", len(data))
+	log.Printf("UART: Bytes sent %d\n", n)
 	return nil
 }
 

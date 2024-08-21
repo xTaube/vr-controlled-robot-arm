@@ -1,6 +1,5 @@
 PROJECT_DIR=$(shell pwd)
 BUILD_DIR=$(PROJECT_DIR)/build
-ARDUINO_CLI_DIR=local/bin
 
 RPI_BUILD_DIR=v-arm/robot-build
 RPI_SCRIPTS_DIR=v-arm/vr-controlled-robot-arm/robot/scripts

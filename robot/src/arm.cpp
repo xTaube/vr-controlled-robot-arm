@@ -1,5 +1,11 @@
 #include "arm.h"
 
+#define X_AX_MIN_ANGLE -65
+#define X_AX_MAX_ANGLE 120
+
+#define Y_AX_MIN_ANGLE -180
+#define Y_AX_MAX_ANGLE 5
+
 
 const float STEPS_PER_DEGREE = 1.0F/DEG_PER_STEP;
 const float X_AX_GEAR_RATIO = 4.89F;
@@ -34,7 +40,7 @@ void initialize_arm_motors(Arm *arm) {
   arm->x_stepper->setAcceleration(DEFAULT_SPEED);
 
   // configure y ax stepper motors
-  arm->y_stepper->setCurrentPosition(0);
+  arm->y_stepper->setCurrentPosition(-90*Y_AX_STEPS_PER_DEGREE);
   arm->y_stepper->setMaxSpeed(MAX_SPEED);
   arm->y_stepper->setAcceleration(DEFAULT_SPEED);
 
@@ -47,6 +53,15 @@ void initialize_arm_motors(Arm *arm) {
 
 RESULT_CODE set_new_arm_position(Arm *arm, JointsAngles *joints, JointsAngles *fallback) {
     if (!arm->state.is_calibrated && arm->state.mode != ARM_CALIBRATION_MODE) return RESULT_ARM_NOT_CALIBRATED;
+
+    if (
+        joints->x < X_AX_MIN_ANGLE || 
+        joints->x > X_AX_MAX_ANGLE || 
+        joints->y < Y_AX_MIN_ANGLE || 
+        joints->y > Y_AX_MAX_ANGLE
+    ) {
+        return RESULT_ARM_INVALID_MOVE_RANGE;
+    }
 
     long steps = (long)round(joints->x*X_AX_STEPS_PER_DEGREE);
     fallback->x = (float)steps*X_AX_DEG_PER_STEP;

@@ -4,6 +4,7 @@
 #define BAUD_RATE 115200
 #define END_OF_TRANSMISSION 0x04
 
+
 AccelStepper y_stepper(AccelStepper::DRIVER, Y_STEP_PIN, Y_DIRECTION_PIN);
 AccelStepper z_stepper(AccelStepper::DRIVER, Z_STEP_PIN, Z_DIRECTION_PIN);
 AccelStepper x_stepper(AccelStepper::DRIVER, X_STEP_PIN, X_DIRECTION_PIN);
@@ -19,6 +20,7 @@ Arm arm = {
   ArmState{false, ARM_NORMAL_MODE}
 };
 
+uint8_t bytes_to_read = 0;
 uint8_t buffer[UART_BUFFER_SIZE] = {0};
 size_t loaded_bytes;
 RESULT_CODE result_code;
@@ -35,7 +37,14 @@ void setup() {
 
 void loop() {
   if (Serial.available() > 0) {
-    int loaded_bytes = Serial.readBytesUntil(END_OF_TRANSMISSION, buffer, UART_BUFFER_SIZE);
+    Serial.readBytes(&bytes_to_read, 1);
+
+    size_t loaded_bytes = 0;
+    while(loaded_bytes < bytes_to_read) {
+      size_t n = Serial.readBytes(buffer, bytes_to_read);
+      loaded_bytes += n;
+    }
+
     switch (buffer[0])
     {
       case SET_NEW_ARM_POSITION: {
@@ -46,7 +55,6 @@ void loop() {
         if (result_code != RESULT_OK) {
           loaded_bytes = load_result_code_to_buffer(buffer, result_code);
           send_result(loaded_bytes);
-          clear_buffer(buffer);
           free(translations);
           break;
         }
@@ -57,7 +65,6 @@ void loop() {
         if (result_code != RESULT_OK) {
           loaded_bytes = load_result_code_to_buffer(buffer, result_code);
           send_result(loaded_bytes);
-          clear_buffer(buffer);
 
           free(translations);
           free(fallback);
@@ -66,7 +73,6 @@ void loop() {
 
         loaded_bytes = load_result_with_joints_angles_to_buffer(buffer, result_code, fallback);
         send_result(loaded_bytes);
-        clear_buffer(buffer);
 
         free(translations);
         free(fallback);
@@ -91,7 +97,6 @@ void loop() {
         if (result_code != RESULT_OK) {
           loaded_bytes = load_result_code_to_buffer(buffer, result_code);
           send_result(loaded_bytes);
-          clear_buffer(buffer);
           free(current_position);
           break;
         }
@@ -172,6 +177,6 @@ void loop() {
 }
 
 void send_result(size_t size) {
-  buffer[size] = END_OF_TRANSMISSION;
+  add_number_of_loaded_bytes_at_the_buffer_beginning(buffer, size);
   Serial.write(buffer, size+1);
 }

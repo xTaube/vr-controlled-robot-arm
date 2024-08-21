@@ -93,7 +93,7 @@ type Robot struct {
 }
 
 func (r *Robot) executeSimpleAction(action ActionId) error {
-	data := make([]byte, ACTION_ID_OFFSET+ACTION_ID_SIZE)
+	data := make([]byte, ACTION_ID_SIZE)
 	data[0] = byte(action)
 
 	err := r.uart.Send(data)
