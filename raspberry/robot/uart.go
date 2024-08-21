@@ -94,12 +94,14 @@ func (u *Uart) Close() error {
 func (u *Uart) Send(data []byte) error {
 	log.Println("UART: Trying to send bytes...")
 	data = append(data, u.buffer.terminationByte) // Add EOT byte
-	if _, err := u.port.Write(data); err != nil {
+	n, err := u.port.Write(data)
+	if err != nil {
 		log.Printf("UART: writing data resulted in error: %s\n", err)
 		return err
 	}
+	
 	u.port.Drain()
-	log.Printf("UART: Bytes sent %d\n", len(data))
+	log.Printf("UART: Bytes sent %d\n", n)
 	return nil
 }
 

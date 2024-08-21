@@ -4,6 +4,7 @@
 #define BAUD_RATE 115200
 #define END_OF_TRANSMISSION 0x04
 
+
 AccelStepper y_stepper(AccelStepper::DRIVER, Y_STEP_PIN, Y_DIRECTION_PIN);
 AccelStepper z_stepper(AccelStepper::DRIVER, Z_STEP_PIN, Z_DIRECTION_PIN);
 AccelStepper x_stepper(AccelStepper::DRIVER, X_STEP_PIN, X_DIRECTION_PIN);
@@ -46,7 +47,6 @@ void loop() {
         if (result_code != RESULT_OK) {
           loaded_bytes = load_result_code_to_buffer(buffer, result_code);
           send_result(loaded_bytes);
-          clear_buffer(buffer);
           free(translations);
           break;
         }
@@ -57,7 +57,6 @@ void loop() {
         if (result_code != RESULT_OK) {
           loaded_bytes = load_result_code_to_buffer(buffer, result_code);
           send_result(loaded_bytes);
-          clear_buffer(buffer);
 
           free(translations);
           free(fallback);
@@ -66,7 +65,6 @@ void loop() {
 
         loaded_bytes = load_result_with_joints_angles_to_buffer(buffer, result_code, fallback);
         send_result(loaded_bytes);
-        clear_buffer(buffer);
 
         free(translations);
         free(fallback);
@@ -91,7 +89,6 @@ void loop() {
         if (result_code != RESULT_OK) {
           loaded_bytes = load_result_code_to_buffer(buffer, result_code);
           send_result(loaded_bytes);
-          clear_buffer(buffer);
           free(current_position);
           break;
         }
