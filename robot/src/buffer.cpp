@@ -60,3 +60,8 @@ size_t load_result_code_to_buffer(uint8_t *buffer, RESULT_CODE code) {
 
     return RESULT_CODE_SIZE;
 }
+
+void add_number_of_loaded_bytes_at_the_buffer_beginning(uint8_t *buffer, size_t number_of_loaded_bytes) {
+    memmove(buffer+sizeof(uint8_t), buffer, number_of_loaded_bytes*sizeof(uint8_t));
+    buffer[0] = (uint8_t)number_of_loaded_bytes;
+}

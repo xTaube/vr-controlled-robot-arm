@@ -20,6 +20,7 @@ Arm arm = {
   ArmState{false, ARM_NORMAL_MODE}
 };
 
+uint8_t bytes_to_read = 0;
 uint8_t buffer[UART_BUFFER_SIZE] = {0};
 size_t loaded_bytes;
 RESULT_CODE result_code;
@@ -36,7 +37,14 @@ void setup() {
 
 void loop() {
   if (Serial.available() > 0) {
-    int loaded_bytes = Serial.readBytesUntil(END_OF_TRANSMISSION, buffer, UART_BUFFER_SIZE);
+    Serial.readBytes(&bytes_to_read, 1);
+
+    size_t loaded_bytes = 0;
+    while(loaded_bytes < bytes_to_read) {
+      size_t n = Serial.readBytes(buffer, bytes_to_read);
+      loaded_bytes += n;
+    }
+
     switch (buffer[0])
     {
       case SET_NEW_ARM_POSITION: {
@@ -169,6 +177,6 @@ void loop() {
 }
 
 void send_result(size_t size) {
-  buffer[size] = END_OF_TRANSMISSION;
+  add_number_of_loaded_bytes_at_the_buffer_beginning(buffer, size);
   Serial.write(buffer, size+1);
 }
