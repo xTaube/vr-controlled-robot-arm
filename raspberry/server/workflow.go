@@ -114,9 +114,9 @@ func (s *XYZAxisCalibrationStep) Execute() error {
 			s.connection.WriteMessage(websocket.TextMessage, response.Parse())
 
 		default:
-			response := ErrorResponse {
+			response := ErrorResponse{
 				Code: RESPONSE_UNKNOWN_COMMAND_ERROR,
-				Err: &CommandNotFound{command},
+				Err:  &CommandNotFound{command},
 			}
 			s.connection.WriteMessage(websocket.TextMessage, response.Parse())
 		}

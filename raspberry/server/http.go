@@ -69,63 +69,48 @@ func WebTransportControlRequestHandler(server *webtransport.Server) func(http.Re
 		}
 		defer robot.ShutDown()
 		log.Println("Robot arm initialized.")
-		
+
 		// PLACE TO WRITE COMMAND HANDLER
 
 		log.Println("Session finished")
 	}
 }
 
-func WebSocketControlRequestHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println("Upgrading session...")
-	connection, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Printf("Error upgrading to websocket:%s.\n", err)
-		return
-	}
-	log.Println("Session upgraded to WebSocket.")
-	defer connection.Close()
-
-	log.Println("Initializing camera...")
-	videoStream := video.InitVideoStream(
-		os.Getenv("CAMERA_DEVICE_PATH"),
-		video.Resoulution{Width: 1920, Height: 1080},
-		video.FPS30,
-		video.MJPEG,
-		"rtsp://localhost:8554/video/feed",
-	)
-	defer videoStream.Stop()
-	log.Println("Camera initialized.")
-
-	log.Println("Initializing robot arm...")
-	robot, err := robot.InitRobot(
-		robot.UartConfig{
-			PortName: os.Getenv("UART_PORT"),
-			Parity:   serial.EvenParity,
-			StopBits: serial.OneStopBit,
-			BaudRate: 115200,
-			DataBits: 8,
-		},
-	)
-	if err != nil {
-		log.Printf("Error initializing robot arm: %s.\n", err)
-		return
-	}
-	defer robot.ShutDown()
-	log.Println("Robot arm initialized.")
-
-	robotCalibrationWorkflow := InitRobotCalibrationWorkflow(connection, robot)
-
-	commandHandler := InitCommandHandler(videoStream, robot, robotCalibrationWorkflow)
-	for {
-		_, request, err := connection.ReadMessage()
+func WebSocketControlRequestHandler(robot *robot.Robot) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Println("Upgrading session...")
+		connection, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			break
+			log.Printf("Error upgrading to websocket:%s.\n", err)
+			return
 		}
+		log.Println("Session upgraded to WebSocket.")
+		defer connection.Close()
 
-		command_id, args := ParseRequestArguments(string(request))
-		response := commandHandler.Handle(command_id, args)
-		connection.WriteMessage(websocket.TextMessage, response.Parse())
+		log.Println("Initializing camera...")
+		videoStream := video.InitVideoStream(
+			os.Getenv("CAMERA_DEVICE_PATH"),
+			video.Resoulution{Width: 1920, Height: 1080},
+			video.FPS30,
+			video.MJPEG,
+			"rtsp://localhost:8554/video/feed",
+		)
+		defer videoStream.Stop()
+		log.Println("Camera initialized.")
+
+		robotCalibrationWorkflow := InitRobotCalibrationWorkflow(connection, robot)
+
+		commandHandler := InitCommandHandler(videoStream, robot, robotCalibrationWorkflow)
+		for {
+			_, request, err := connection.ReadMessage()
+			if err != nil {
+				break
+			}
+
+			command_id, args := ParseRequestArguments(string(request))
+			response := commandHandler.Handle(command_id, args)
+			connection.WriteMessage(websocket.TextMessage, response.Parse())
+		}
+		log.Println("Session finished")
 	}
-	log.Println("Session finished")
 }

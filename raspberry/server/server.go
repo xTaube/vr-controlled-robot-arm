@@ -7,6 +7,7 @@ import (
 
 	"github.com/quic-go/quic-go/http3"
 	"github.com/quic-go/webtransport-go"
+	"github.com/xTaube/vr-controlled-robot-arm/robot"
 )
 
 func addWebTransportHandlers(s *webtransport.Server) {
@@ -24,12 +25,12 @@ func RunWebTransportServer(port string, certFilePath string, keyFilePath string)
 	return err
 }
 
-func addWebSocketHandlers() {
-	http.HandleFunc("/control", WebSocketControlRequestHandler)
+func addWebSocketHandlers(robot *robot.Robot) {
+	http.HandleFunc("/control", WebSocketControlRequestHandler(robot))
 }
 
-func RunWebSocketServer(port string) error {
-	addWebSocketHandlers()
+func RunWebSocketServer(port string, robot *robot.Robot) error {
+	addWebSocketHandlers(robot)
 	log.Printf("Starting server on address: :%s", port)
 	err := http.ListenAndServe(
 		fmt.Sprintf(":%s", port),
