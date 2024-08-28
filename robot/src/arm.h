@@ -69,18 +69,17 @@ struct Arm {
     Servo *v_servo;
     Servo *w_servo;
     ArmState state;
+
+    void initialize_motors();
+    RESULT_CODE set_new_position(JointsAngles *translations, JointsAngles *fallback);
+    RESULT_CODE set_speed(float speed);
+    RESULT_CODE set_current_position_as_reference();
+    RESULT_CODE get_current_position(JointsAngles *position);
+    RESULT_CODE is_calibrated();
+    bool is_in_move();
+    void set_mode(ARM_MODE mode);
+    void move_steppers();
+    void set_calibration(bool is_calibrated);
 };
-
-
-void initialize_arm_motors(Arm *arm);
-RESULT_CODE set_new_arm_position(Arm *arm, JointsAngles *translations, JointsAngles *fallback);
-RESULT_CODE set_arm_speed(Arm *arm, float speed);
-RESULT_CODE set_arm_current_position_as_reference(Arm *arm);
-RESULT_CODE get_arm_current_position(Arm *arm, JointsAngles *position);
-RESULT_CODE is_arm_calibrated(Arm *arm);
-bool is_arm_in_move(Arm *arm);
-void set_arm_mode(Arm *arm, ARM_MODE mode);
-void move_arm_steppers(Arm *arm);
-void set_arm_calibration(Arm *arm, bool is_calibrated);
 
 #endif
