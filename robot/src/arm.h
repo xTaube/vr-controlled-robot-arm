@@ -28,7 +28,9 @@ typedef enum {
     START_CALIBRATION = 5,
     FINISH_CALIBRATION = 6,
     ABORT_CALIBRATION = 7,
-    CHECK_ARM_IDLE = 8
+    CHECK_ARM_IDLE = 8,
+    OPEN_GRIPPER = 9,
+    CLOSE_GRIPPER = 10
 } ACTION_TYPE;
 
 typedef enum {
@@ -80,6 +82,8 @@ struct Arm {
     void set_mode(ARM_MODE mode);
     void move_steppers();
     void set_calibration(bool is_calibrated);
+    void open_gripper();
+    void close_gripper();
 };
 
 #endif

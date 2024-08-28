@@ -136,3 +136,18 @@ void Arm::move_steppers() {
     if (this->y_stepper->distanceToGo() != 0) this->y_stepper->run();
     if (this->z_stepper->distanceToGo() != 0) this->z_stepper->run();
 }
+
+void Arm::open_gripper() {
+    analogWrite(GRIPPER_MOTOR_B1_PIN, 512);
+    delay(50);
+
+    analogWrite(GRIPPER_MOTOR_B1_PIN, 0);
+}
+
+
+void Arm::close_gripper() {
+    analogWrite(GRIPPER_MOTOR_B2_PIN, 512);
+    delay(50);
+
+    analogWrite(GRIPPER_MOTOR_B2_PIN, 0);
+}

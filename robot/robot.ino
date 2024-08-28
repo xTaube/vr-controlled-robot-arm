@@ -166,6 +166,30 @@ void loop() {
         send_result(loaded_bytes);
         break;
       }
+      case OPEN_GRIPPER: {
+        clear_buffer(buffer);
+        if (arm.is_calibrated()) {
+          arm.open_gripper();
+          result_code = RESULT_OK;
+        }
+        else result_code = RESULT_ARM_NOT_CALIBRATED;
+
+        loaded_bytes = load_result_code_to_buffer(buffer, result_code);
+        send_result(loaded_bytes);
+        break;
+      }
+      case CLOSE_GRIPPER: {
+        clear_buffer(buffer);
+        if (arm.is_calibrated()) {
+          arm.close_gripper();
+          result_code = RESULT_OK;
+        }
+        else result_code = RESULT_ARM_NOT_CALIBRATED;
+
+        loaded_bytes = load_result_code_to_buffer(buffer, result_code);
+        send_result(loaded_bytes);
+        break;
+      }
       default: {
         loaded_bytes = load_result_code_to_buffer(buffer, RESULT_UNKNOWN_ACTION);
         send_result(loaded_bytes);
