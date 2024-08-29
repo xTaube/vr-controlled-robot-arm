@@ -61,6 +61,8 @@ const (
 	ACTION_FINISH_CALIBRATION
 	ACTION_ABORT_CALIBRATION
 	ACTION_CHECK_IDLE
+	ACTION_OPEN_GRIPPER
+	ACTION_CLOSE_GRIPPER
 )
 
 const (
@@ -250,6 +252,14 @@ func (r *Robot) AbortCalibration() error {
 func (r *Robot) IsIdle() bool {
 	err := r.executeSimpleAction(ACTION_CHECK_IDLE)
 	return err == nil
+}
+
+func (r *Robot) OpenGripper() error {
+	return r.executeSimpleAction(ACTION_OPEN_GRIPPER)
+}
+
+func (r *Robot) CloseGripper() error {
+	return r.executeSimpleAction(ACTION_CLOSE_GRIPPER)
 }
 
 func (r *Robot) ShutDown() {

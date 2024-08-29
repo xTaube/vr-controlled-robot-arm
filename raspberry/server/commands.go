@@ -26,6 +26,8 @@ const (
 	SET_ROBOT_SPEED
 	GET_ROBOT_CURRENT_POSITION
 	CALIBRATE_ROBOT
+	OPEN_GRIPPER
+	CLOSE_GRIPPER
 )
 
 type CommandHandler struct {
@@ -54,6 +56,12 @@ func (ch *CommandHandler) Handle(command_id CommandIdentifier, args []string) Re
 
 	case CALIBRATE_ROBOT:
 		return ch.calibrateRobotCommandHandler()
+
+	case OPEN_GRIPPER:
+		return ch.openGripperCommandHandler()
+
+	case CLOSE_GRIPPER:
+		return ch.closeGripperCommandHandler()
 
 	default:
 		return &ErrorResponse{Code: RESPONSE_UNKNOWN_COMMAND_ERROR, Err: &CommandNotFound{command_id}}
@@ -138,6 +146,22 @@ func (ch *CommandHandler) calibrateRobotCommandHandler() Response {
 	err := ch.robotCalibrationWorkflow.Start()
 	if err != nil {
 		return &ErrorResponse{Code: RESPONSE_ROBOT_CALIBRATION_ERROR, Err: err}
+	}
+	return &BaseResponse{Code: RESPONSE_OK}
+}
+
+func (ch *CommandHandler) openGripperCommandHandler() Response {
+	err := ch.robot.OpenGripper()
+	if err != nil {
+		return &ErrorResponse{Code: RESPONSE_ROBOT_CANNOT_EXECUTE_COMMAND_ERROR, Err: err}
+	}
+	return &BaseResponse{Code: RESPONSE_OK}
+}
+
+func (ch *CommandHandler) closeGripperCommandHandler() Response {
+	err := ch.robot.CloseGripper()
+	if err != nil {
+		return &ErrorResponse{Code: RESPONSE_ROBOT_CANNOT_EXECUTE_COMMAND_ERROR, Err: err}
 	}
 	return &BaseResponse{Code: RESPONSE_OK}
 }

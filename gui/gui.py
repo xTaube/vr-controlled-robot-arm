@@ -15,7 +15,8 @@ class RobotGUI:
         self.speed_send_button = None
         self.speed_slider = None
         self.set_all_to_0_button = None
-        self.gripper_button = None
+        self.gripper_open_button = None
+        self.gripper_close_button = None
         self.send_xyz_button = None
         self.send_joints_button = None
         self.right_sliders = None
@@ -31,8 +32,6 @@ class RobotGUI:
         style = ttk.Style()
         style.configure("Green.TButton", background="green")
         style.configure("Red.TButton", background="red")
-
-        self.gripper_status = self.get_initial_gripper_status()
 
         self.left_frame = ttk.Frame(self.root)
         self.left_frame.grid(row=0, column=0, padx=10, pady=10, sticky="n")
@@ -157,19 +156,24 @@ class RobotGUI:
         )
         self.speed_slider.grid(row=4, column=0, padx=5, pady=5)
         self.speed_send_button = ttk.Button(
-            self.right_frame, text="Send speeeeeeeed", command=self.send_speed_command
+            self.right_frame, text="Send speed", command=self.send_speed_command
         )
         self.speed_send_button.grid(row=5, column=0, padx=5, pady=5)
 
-        self.gripper_button = ttk.Button(
-            self.right_frame, text=self.get_gripper_text(), command=self.toggle_gripper
+        self.gripper_open_button = ttk.Button(
+            self.right_frame, text="Open gripper", command=self.send_open_gripper_command
         )
-        self.gripper_button.grid(row=6, column=0, padx=5, pady=5)
+        self.gripper_open_button.grid(row=6, column=0, padx=5, pady=5)
+
+        self.gripper_close_button = ttk.Button(
+            self.right_frame, text="Close gripper", command=self.send_close_gripper_command
+        )
+        self.gripper_close_button.grid(row=7, column=0, padx=5, pady=5)
 
         self.send_xyz_button = ttk.Button(
             self.right_frame, text="Send commands", command=self.send_xyz_commands
         )
-        self.send_xyz_button.grid(row=7, column=0, padx=5, pady=5)
+        self.send_xyz_button.grid(row=8, column=0, padx=5, pady=5)
 
     def send_speed_command(self) -> None:
         speed = str(self.speed_slider.get())
@@ -192,12 +196,11 @@ class RobotGUI:
             )
             self.set_all_to_0()
 
-    def get_gripper_text(self) -> str:
-        return "Open Gripper" if not self.gripper_status else "Close Gripper"
+    def send_open_gripper_command(self) -> None:
+        self.websocket_client.send_message("7")
 
-    def toggle_gripper(self) -> None:
-        self.gripper_status = not self.gripper_status
-        self.gripper_button.configure(text=self.get_gripper_text())
+    def send_close_gripper_command(self) -> None:
+        self.websocket_client.send_message("8")
 
     def send_xyz_commands(self) -> None:
         """To be implemented"""
