@@ -29,6 +29,8 @@ void Arm::initialize_motors() {
     // configure gripper
   pinMode(GRIPPER_MOTOR_B1_PIN, OUTPUT);
   pinMode(GRIPPER_MOTOR_B2_PIN, OUTPUT);
+  digitalWrite(GRIPPER_MOTOR_B1_PIN, LOW);
+  digitalWrite(GRIPPER_MOTOR_B2_PIN, LOW);
 
   // configure v and w axes servo motors
   this->v_servo->attach(V_SERVO_PWM_PIN);
@@ -138,16 +140,16 @@ void Arm::move_steppers() {
 }
 
 void Arm::open_gripper() {
-    analogWrite(GRIPPER_MOTOR_B1_PIN, 512);
-    delay(50);
+    analogWrite(GRIPPER_MOTOR_B1_PIN, 150);
+    delay(100);
 
     analogWrite(GRIPPER_MOTOR_B1_PIN, 0);
 }
 
 
 void Arm::close_gripper() {
-    analogWrite(GRIPPER_MOTOR_B2_PIN, 512);
-    delay(50);
+    analogWrite(GRIPPER_MOTOR_B2_PIN, 175);
+    delay(100);
 
     analogWrite(GRIPPER_MOTOR_B2_PIN, 0);
 }

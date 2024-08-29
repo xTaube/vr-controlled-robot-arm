@@ -18,14 +18,14 @@ type UartConfig struct {
 }
 
 type UartBuffer struct {
-	buff            []byte
-	bytesRead      int
+	buff      []byte
+	bytesRead int
 }
 
 func initUartBuffer() *UartBuffer {
 	buffer := UartBuffer{
-		buff:            make([]byte, UART_BUFFER_LEN),
-		bytesRead:      0,
+		buff:      make([]byte, UART_BUFFER_LEN),
+		bytesRead: 0,
 	}
 
 	return &buffer
@@ -40,7 +40,7 @@ func (ub *UartBuffer) load(port serial.Port) error {
 	}
 
 	totalBytes := 0
-	for ;totalBytes < int(bytesToRead[0]); {
+	for totalBytes < int(bytesToRead[0]) {
 		n, err := port.Read(ub.buff[totalBytes:])
 		if err != nil {
 			return err
@@ -98,7 +98,7 @@ func (u *Uart) Send(data []byte) error {
 		log.Printf("UART: writing data resulted in error: %s\n", err)
 		return err
 	}
-	
+
 	u.port.Drain()
 	log.Printf("UART: Bytes sent %d\n", n)
 	return nil

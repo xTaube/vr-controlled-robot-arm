@@ -24,6 +24,13 @@ server-remote-deploy:
 	scp $(BINARY_NAME) raspberry:$(BINARY_RPI_LOCATION_TEMP)
 	ssh raspberry sudo $(RPI_SCRIPTS_LOCATION)/update_and_restart_robot_server_service.sh
 
+stop-server:
+	ssh raspberry sudo systemctl stop $(ROBOT_SERVER_SERVICE_NAME).service
+
+start-server:
+	ssh raspberry sudo systemctl start $(ROBOT_SERVER_SERVICE_NAME).service
+	ssh raspberry sudo journalctl -u $(ROBOT_SERVER_SERVICE_NAME).service -f
+
 format:
 	gofmt -s -w .
  
