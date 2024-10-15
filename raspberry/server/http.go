@@ -76,7 +76,11 @@ func WebTransportControlRequestHandler(server *webtransport.Server) func(http.Re
 	}
 }
 
-func WebSocketControlRequestHandler(robot *robot.Robot) func(http.ResponseWriter, *http.Request) {
+func WebSocketControlRequestHandler(
+	robot *robot.Robot,
+	video0 *video.VideoStream,
+	video1 *video.VideoStream,
+) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("Upgrading session...")
 		connection, err := upgrader.Upgrade(w, r, nil)
@@ -87,20 +91,12 @@ func WebSocketControlRequestHandler(robot *robot.Robot) func(http.ResponseWriter
 		log.Println("Session upgraded to WebSocket.")
 		defer connection.Close()
 
-		log.Println("Initializing camera...")
-		videoStream := video.InitVideoStream(
-			os.Getenv("CAMERA_DEVICE_PATH"),
-			video.Resoulution{Width: 1920, Height: 1080},
-			video.FPS30,
-			video.MJPEG,
-			"rtsp://localhost:8554/video/feed",
-		)
-		defer videoStream.Stop()
-		log.Println("Camera initialized.")
+		defer video0.Stop()
+		defer video1.Stop()
 
 		robotCalibrationWorkflow := InitRobotCalibrationWorkflow(connection, robot)
 
-		commandHandler := InitCommandHandler(videoStream, robot, robotCalibrationWorkflow)
+		commandHandler := InitCommandHandler(video0, video1, robot, robotCalibrationWorkflow)
 		for {
 			_, request, err := connection.ReadMessage()
 			if err != nil {

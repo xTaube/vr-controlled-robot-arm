@@ -31,7 +31,8 @@ const (
 )
 
 type CommandHandler struct {
-	videoStream              *video.VideoStream
+	video0                   *video.VideoStream
+	video1                   *video.VideoStream
 	robot                    *robot.Robot
 	robotCalibrationWorkflow *RobotCalibrationWorkflow
 }
@@ -88,29 +89,42 @@ func (ch *CommandHandler) moveArmCommandHandler(command_args []string) Response 
 	log.Println("Attempt finished.")
 	return &ResponseWithFloat32Arguments{
 		Code: RESPONSE_OK,
-		Args: []float32{result.X, result.Y, result.Z, result.V, result.W},
+		Args: []float32{result.Z, result.Y, result.X, result.V, result.W},
 	}
 }
 
 func (ch *CommandHandler) startVideoStreamCommandHandler() Response {
 	log.Println("Turning stream on...")
-	rtspServerAddress, err := ch.videoStream.Start()
+	rtspServerAddress0, err := ch.video0.Start()
 	if err != nil {
-		log.Printf("Error occured during turning stream on: %s\n", err)
+		log.Printf("Error occured during turning stream 0 on: %s\n", err)
 		return &ErrorResponse{Code: RESPONSE_STREAM_ERROR, Err: err}
 	}
 
-	log.Printf("Streaming to %s.\n", rtspServerAddress)
-	return &ResponseWithStringArguments{RESPONSE_OK, []string{rtspServerAddress}}
+	rtspServerAddress1, err := ch.video1.Start()
+	if err != nil {
+		log.Printf("Error occured during turning stream 1 on: %s\n", err)
+		return &ErrorResponse{Code: RESPONSE_STREAM_ERROR, Err: err}
+	}
+
+	log.Printf("Streaming to %s, %s.\n", rtspServerAddress0, rtspServerAddress1)
+	return &ResponseWithStringArguments{RESPONSE_OK, []string{rtspServerAddress0, rtspServerAddress1}}
 }
 
 func (ch *CommandHandler) stopVideoStreamCommandHandler() Response {
 	log.Println("Shutting off the stream...")
-	err := ch.videoStream.Stop()
+	err := ch.video0.Stop()
 	if err != nil {
-		log.Printf("Error occured during turning stream off: %s\n", err)
+		log.Printf("Error occured during turning stream 0 off: %s\n", err)
 		return &ErrorResponse{Code: RESPONSE_STREAM_ERROR, Err: err}
 	}
+
+	err = ch.video1.Stop()
+	if err != nil {
+		log.Printf("Error occured during turning stream 1 off: %s\n", err)
+		return &ErrorResponse{Code: RESPONSE_STREAM_ERROR, Err: err}
+	}
+
 	log.Println("Stream stopped.")
 	return &BaseResponse{Code: RESPONSE_OK}
 }
@@ -138,7 +152,7 @@ func (ch *CommandHandler) getRobotCurrentPositionCommandHandler() Response {
 	log.Println("Attempt finished.")
 	return &ResponseWithFloat32Arguments{
 		Code: RESPONSE_OK,
-		Args: []float32{currentPosition.X, currentPosition.Y, currentPosition.Z, currentPosition.V, currentPosition.W},
+		Args: []float32{currentPosition.Z, currentPosition.Y, currentPosition.X, currentPosition.V, currentPosition.W},
 	}
 }
 
@@ -167,12 +181,14 @@ func (ch *CommandHandler) closeGripperCommandHandler() Response {
 }
 
 func InitCommandHandler(
-	videoStream *video.VideoStream,
+	video0 *video.VideoStream,
+	video1 *video.VideoStream,
 	robot *robot.Robot,
 	robotCalibrationWorkflow *RobotCalibrationWorkflow,
 ) *CommandHandler {
 	return &CommandHandler{
-		videoStream:              videoStream,
+		video0:                   video0,
+		video1:                   video1,
 		robot:                    robot,
 		robotCalibrationWorkflow: robotCalibrationWorkflow,
 	}

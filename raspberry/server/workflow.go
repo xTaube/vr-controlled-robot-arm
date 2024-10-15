@@ -110,7 +110,7 @@ func (s *XYZAxisCalibrationStep) Execute() error {
 				s.connection.WriteMessage(websocket.TextMessage, response.Parse())
 				continue
 			}
-			response := ResponseWithFloat32Arguments{Code: RESPONSE_OK, Args: []float32{fallback.X, fallback.Y, fallback.Z}}
+			response := ResponseWithFloat32Arguments{Code: RESPONSE_OK, Args: []float32{fallback.Z, fallback.Y, fallback.X, fallback.V, fallback.W}}
 			s.connection.WriteMessage(websocket.TextMessage, response.Parse())
 
 		default:

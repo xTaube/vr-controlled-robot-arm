@@ -32,7 +32,7 @@ func initUartBuffer() *UartBuffer {
 }
 
 func (ub *UartBuffer) load(port serial.Port) error {
-	log.Println("UART: Trying to read...")
+	// log.Println("UART: Trying to read...")
 	bytesToRead := make([]byte, 1)
 	_, err := port.Read(bytesToRead[:])
 	if err != nil {
@@ -47,7 +47,7 @@ func (ub *UartBuffer) load(port serial.Port) error {
 		}
 		totalBytes += n
 	}
-	log.Printf("UART: Read %d bytes.\n", totalBytes)
+	// log.Printf("UART: Read %d bytes.\n", totalBytes)
 	ub.bytesRead = totalBytes
 	return nil
 }
@@ -90,17 +90,17 @@ func (u *Uart) Close() error {
 }
 
 func (u *Uart) Send(data []byte) error {
-	log.Println("UART: Trying to send bytes...")
+	// log.Println("UART: Trying to send bytes...")
 	data = slices.Insert(data, 0, byte(len(data))) // Add number of bytes to read at the beginning
 
-	n, err := u.port.Write(data)
+	_, err := u.port.Write(data)
 	if err != nil {
 		log.Printf("UART: writing data resulted in error: %s\n", err)
 		return err
 	}
 
 	u.port.Drain()
-	log.Printf("UART: Bytes sent %d\n", n)
+	// log.Printf("UART: Bytes sent %d\n", n)
 	return nil
 }
 

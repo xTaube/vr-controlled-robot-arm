@@ -6,7 +6,6 @@ SOURCE_FILE=$(CURRENT_DIR)/main.go
 RPI_PROJECT_LOCATION=v-arm
 BINARY_RPI_LOCATION_TEMP=$(RPI_PROJECT_LOCATION)/server-build/temp/exec
 RPI_SCRIPTS_LOCATION=$(RPI_PROJECT_LOCATION)/vr-controlled-robot-arm/raspberry/scripts
-
 ROBOT_SERVER_SERVICE_NAME=robot-server
 
 
@@ -36,3 +35,6 @@ format:
  
 make raspberry-pull-main:
 	ssh raspberry $(RPI_SCRIPTS_LOCATION)/pull_main.sh
+
+make start-rtsp-server:
+	ssh raspberry ./mediamtx
