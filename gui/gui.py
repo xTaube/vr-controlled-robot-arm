@@ -63,8 +63,8 @@ class RobotGUI:
             (-360, 360, "z"),  # Range for Joint z
             (-180, 5, "y"),  # Range for Joint y
             (-65, 95, "x"),  # Range for Joint x
-            (0, 180, "v"),  # Range for Joint v
-            (5, 180, "w"),  # Range for Joint w
+            (-90, 90, "v"),  # Range for Joint v
+            (-90, 90, "w"),  # Range for Joint w
         ]
 
         for i, (min_val, max_val, axis_name) in enumerate(slider_ranges):
@@ -114,8 +114,8 @@ class RobotGUI:
         self.left_sliders[0].set(0)
         self.left_sliders[1].set(-90)
         self.left_sliders[2].set(0)
-        self.left_sliders[3].set(90)
-        self.left_sliders[4].set(90)
+        self.left_sliders[3].set(0)
+        self.left_sliders[4].set(0)
 
     def create_right_panel(self) -> None:
         self.right_sliders = []
