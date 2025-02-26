@@ -26,7 +26,11 @@ void clear_buffer(uint8_t *buffer) {
   memset(buffer, 0, UART_BUFFER_SIZE);
 }
 
-RESULT_CODE load_joints_angles_from_buffer(uint8_t *buffer, size_t buffer_len, JointsAngles *joints_angles) {
+RESULT_CODE load_joints_angles_from_buffer(
+    uint8_t *buffer,
+    size_t buffer_len,
+    JointsAngles *joints_angles
+) {
     if (buffer_len < TOTAL_ACTION_WITH_JOINTS_ANGLES_SIZE) {
         return RESULT_INVALID_NUMBER_OF_PARAMETERS;
     }

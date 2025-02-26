@@ -6,6 +6,12 @@
 #define Y_AX_MIN_ANGLE -180
 #define Y_AX_MAX_ANGLE 5
 
+#define V_AX_MIN_ANGLE -90
+#define V_AX_MAX_ANGLE 90
+
+#define W_AX_MIN_ANGLE -90
+#define W_AX_MAX_ANGLE 90
+
 
 const float STEPS_PER_DEGREE = 1.0F/DEG_PER_STEP;
 const float X_AX_GEAR_RATIO = 4.89F;
@@ -60,7 +66,9 @@ RESULT_CODE Arm::set_new_position(JointsAngles *joints, JointsAngles *fallback) 
         joints->x < X_AX_MIN_ANGLE || 
         joints->x > X_AX_MAX_ANGLE || 
         joints->y < Y_AX_MIN_ANGLE || 
-        joints->y > Y_AX_MAX_ANGLE
+        joints->y > Y_AX_MAX_ANGLE ||
+        joints->w < W_AX_MIN_ANGLE ||
+        joints->w > W_AX_MAX_ANGLE
     ) {
         return RESULT_ARM_INVALID_MOVE_RANGE;
     }
@@ -78,10 +86,13 @@ RESULT_CODE Arm::set_new_position(JointsAngles *joints, JointsAngles *fallback) 
     this->z_stepper->moveTo(steps);
 
     fallback->v = round(joints->v);
-    this->v_servo->write((int)fallback->v);
+    int v = int(fallback->v) + 90;
+    this->v_servo->write(v);
 
     fallback->w = round(joints->w);
-    this->w_servo->write((int)fallback->w);
+    int w = 90 - int(fallback->w);
+    if (w < 5) w = 5;
+    this->w_servo->write(w);
 
     return RESULT_OK;
 }

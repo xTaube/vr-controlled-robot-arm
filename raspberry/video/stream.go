@@ -51,7 +51,7 @@ func (vs *VideoStream) Start() (string, error) {
 		return "", &StreamOnError{}
 	}
 
-	logFile, err := os.Create(fmt.Sprintf("stream-logs/%s.txt", time.Now()))
+	logFile, err := os.Create(fmt.Sprintf("/home/majkel/v-arm/stream-logs/%s.txt", time.Now()))
 	if err != nil {
 		return "", err
 	}
@@ -73,6 +73,10 @@ func (vs *VideoStream) Start() (string, error) {
 		vs.device,
 		"-c",
 		"copy",
+		"-fflags", 
+		"nobuffer",
+		"-rtbufsize",
+		"1M",
 		"-f",
 		"rtsp",
 		vs.outputServerAddres,
